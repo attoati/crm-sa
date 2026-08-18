@@ -1376,12 +1376,22 @@ function precoComICMS(prod) {
 
 /* Preco de tabela (com ICMS) sem o IPI embutido */
 function precoSemIPI(prod) {
-  /* SUFRAMA completo — substitui cálculo de ICMS pelos descontos de ZFM */
+  /* SUFRAMA completo — aplica ICMS normal do estado + isenção PIS+COFINS (9,12%) sobre DIF */
   var suf = getSuframaCliente(clienteAtual);
   if (suf === 'completo') {
-    var origem = ((prod.origem||'N')+'').toUpperCase();
-    var descSuf = (origem === 'I') ? SUFRAMA_DESC_IMPORTADO : SUFRAMA_DESC_NACIONAL;
-    return precoTabelaAjustado(prod) * (1 - descSuf);
+    var tabSuf = document.getElementById('sel-tabela') ? document.getElementById('sel-tabela').value : 'matriz';
+    var icmsSuf;
+    if (tabSuf === 'filial') {
+      icmsSuf = 0;
+    } else if (temDescEspecialMatrizForaSP(prod)) {
+      icmsSuf = 0;
+    } else {
+      var estSuf = clienteAtual ? clienteAtual.estado : null;
+      var icmsDataSuf = (estSuf && DB.icms[estSuf]) ? DB.icms[estSuf].matriz : null;
+      icmsSuf = (typeof icmsDataSuf === 'number') ? icmsDataSuf : 0.1182;
+    }
+    /* DIF price × (1 - PIS+COFINS 9,12%) — mesmo cálculo para Nacional e Importado */
+    return precoTabelaAjustado(prod) * (1 - icmsSuf) * (1 - SUFRAMA_DESC_IMPORTADO);
   }
   var tabAtual = document.getElementById('sel-tabela') ? document.getElementById('sel-tabela').value : 'matriz';
   var icms;
@@ -1411,8 +1421,7 @@ function valorIPIUnit(prod) {
    Importado: PIS 1,65% + COFINS 7,60%           =  9,12%
    IPI      : isento em todos os itens
 ══════════════════════════════════════════════════════════════ */
-var SUFRAMA_DESC_NACIONAL  = 0.1548;
-var SUFRAMA_DESC_IMPORTADO = 0.0912;
+var SUFRAMA_DESC_IMPORTADO = 0.0912; /* PIS 1,65% + COFINS 7,60% */
 
 function getSuframaCliente(c) {
   if (!c) return null;
@@ -2347,7 +2356,7 @@ function gerarHTMLPedido() {
   var _sufPdf = getSuframaCliente(clienteAtual);
   if (_sufPdf) {
     var _sufLabel = _sufPdf === 'completo'
-      ? 'SUFRAMA / ZONA FRANCA — Completo: Nacional -15,48% | Importado -9,12% | IPI Isento'
+      ? 'SUFRAMA / ZONA FRANCA — Preço DIF × (1-9,12% PIS+COFINS) | IPI Isento'
       : 'SUFRAMA / ZONA FRANCA — IPI Isento em todos os itens';
     h += '<div style="margin-bottom:14px;padding:7px 14px;background:#e8fff3;border-left:4px solid #00c853;border-radius:0 6px 6px 0;font-size:8.5pt;font-weight:700;color:#1b5e20">';
     h += '&#9889; ' + _sufLabel;
