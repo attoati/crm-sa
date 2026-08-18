@@ -980,6 +980,7 @@ body{padding-top:104px!important}
       <div class="totais-box" id="totais-box" style="display:none">
         <div class="row"><span>Subtotal bruto</span><span id="tot-bruto">R$ 0,00</span></div>
         <div class="row" id="row-tot-ipi" style="display:none"><span style="color:var(--orange)">&#9654; IPI total pago</span><span id="tot-ipi" style="color:var(--orange)">R$ 0,00</span></div>
+        <div class="row" id="row-tot-zmf" style="display:none"><span style="color:#00e676">⚡ ICMS ZFM 7% (Nacional)</span><span id="tot-zmf" style="color:#00e676">- R$ 0,00</span></div>
         <div class="row"><span id="lbl-tot-cond">Desc. condicao (0%)</span><span id="tot-desc-cond">- R$ 0,00</span></div>
         <div class="row"><span id="lbl-tot-com">Desc. comercial (0%)</span><span id="tot-desc-com">- R$ 0,00</span></div>
         <div class="row"><span>Frete</span><span id="tot-frete">A verificar</span></div>
@@ -1040,11 +1041,10 @@ document.addEventListener('DOMContentLoaded', function() {
   /* Mostra hora do último backup salvo */
   var ultimoSync = localStorage.getItem('crm_last_sync');
   atualizarFooterSync(ultimoSync);
-  /* Mostra data da última atualização do arquivo CRM */
+  /* Mostra data/hora da última atualização da tabela de preços */
   var elVer = document.getElementById('footer-crm-version');
-  if (elVer) {
-    var d = new Date(document.lastModified);
-    elVer.textContent = 'Atualizado: ' + d.toLocaleString('pt-BR');
+  if (elVer && DB && DB._ultima_atualizacao) {
+    elVer.textContent = '⟳ Tabela: ' + DB._ultima_atualizacao;
   }
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.autocomplete-wrap')) {
@@ -1652,11 +1652,16 @@ function onObsItemChange(idx, val) {
   itensPedido[idx].obsItem = val;
 }
 
+function precoBaseCalc(prod) {
+  if (getSuframaCliente(clienteAtual)) return precoSemIPI(prod);
+  return precoComICMS(prod);
+}
+
 function calcTotalItemNum(idx) {
   var item = itensPedido[idx];
   if (!item) return 0;
   var qtd = parseInt(item.qtd)||1;
-  var preco = precoComICMS(item.prod);
+  var preco = precoBaseCalc(item.prod);
   var di = (item.descItem||0) / 100;
   var descCom = parseFloat(document.getElementById('desc-comercial').value||0) / 100;
   var cond = getCondicao();
@@ -1673,13 +1678,18 @@ function calcTotalLiquido() {
   var cond = getCondicao();
   var descCond = cond ? (cond.desconto||0) : 0;
   var total = 0;
+  var totalNac = 0;
   for (var i = 0; i < itensPedido.length; i++) {
     var item = itensPedido[i];
     var qtd = parseInt(item.qtd)||1;
-    var preco = precoComICMS(item.prod);
+    var preco = precoBaseCalc(item.prod);
     var di = (item.descItem||0) / 100;
-    total += preco * qtd * (1 - descCond) * (1 - descCom) * (1 - di);
+    var val = preco * qtd * (1 - descCond) * (1 - descCom) * (1 - di);
+    total += val;
+    if (((item.prod.origem||'N')+'').toUpperCase() !== 'I') totalNac += val;
   }
+  var sufTot = getSuframaCliente(clienteAtual);
+  if (sufTot === 'completo') total -= totalNac * 0.07;
   return total;
 }
 
@@ -1750,7 +1760,7 @@ function atualizarTotais() {
   var descCond = cond ? (cond.desconto||0) : 0;
   var bruto = 0;
   for (var i = 0; i < itensPedido.length; i++) {
-    bruto += precoComICMS(itensPedido[i].prod) * (parseInt(itensPedido[i].qtd)||1);
+    bruto += precoBaseCalc(itensPedido[i].prod) * (parseInt(itensPedido[i].qtd)||1);
   }
   var apDescCond = bruto * descCond;
   var apDescCom  = (bruto - apDescCond) * descCom;
@@ -1762,7 +1772,7 @@ function atualizarTotais() {
       var brutoAjustado = 0;
       for (var k = 0; k < itensPedido.length; k++) {
         var diK = (itensPedido[k].descItem||0) / 100;
-        var valK = precoComICMS(itensPedido[k].prod) * (parseInt(itensPedido[k].qtd)||1);
+        var valK = precoBaseCalc(itensPedido[k].prod) * (parseInt(itensPedido[k].qtd)||1);
         brutoAjustado += valK * (1 - diK) * (1 - descCom);
       }
       var descTotalPct = (1 - (brutoAjustado / bruto)) * 100;
@@ -1790,6 +1800,24 @@ function atualizarTotais() {
   document.getElementById('tot-desc-cond').textContent = '- ' + fmt(apDescCond);
   document.getElementById('lbl-tot-com').textContent = 'Desc. comercial (' + (descCom*100).toFixed(1) + '%):';
   document.getElementById('tot-desc-com').textContent = '- ' + fmt(apDescCom);
+  /* Linha ICMS ZFM 7% (só SUFRAMA completo, apenas items Nacionais) */
+  var rowZMF = document.getElementById('row-tot-zmf');
+  var elZMF  = document.getElementById('tot-zmf');
+  if (getSuframaCliente(clienteAtual) === 'completo') {
+    var _brutoNac = 0;
+    for (var _zn = 0; _zn < itensPedido.length; _zn++) {
+      if (((itensPedido[_zn].prod.origem||'N')+'').toUpperCase() !== 'I') {
+        var _di = (itensPedido[_zn].descItem||0)/100;
+        _brutoNac += precoBaseCalc(itensPedido[_zn].prod) * (parseInt(itensPedido[_zn].qtd)||1)
+                     * (1-descCond) * (1-descCom) * (1-_di);
+      }
+    }
+    var _zmfVal = _brutoNac * 0.07;
+    if (rowZMF) rowZMF.style.display = _zmfVal > 0.01 ? '' : 'none';
+    if (elZMF)  elZMF.textContent = '- ' + fmt(_zmfVal);
+  } else {
+    if (rowZMF) rowZMF.style.display = 'none';
+  }
   document.getElementById('tot-liquido').textContent = fmt(liquido);
   document.getElementById('lbl-desc-cond').textContent = cond ? (cond.nome + ' — ' + (descCond*100).toFixed(1) + '% desc') : '';
   var tipo = document.getElementById('sel-frete').value;
