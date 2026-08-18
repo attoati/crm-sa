@@ -1017,6 +1017,13 @@ fetch('CRM_DATA.json')
   .then(function(r){ return r.json(); })
   .then(function(data){
     Object.assign(DB, data);
+    /* Mescla campo 'origem' de DB.produtos nos arrays produtos_matriz e produtos_filial */
+    if (DB.produtos && DB.produtos.length) {
+      var _origemMap = {};
+      DB.produtos.forEach(function(p){ if(p.codigo && p.origem) _origemMap[p.codigo] = p.origem; });
+      (DB.produtos_matriz||[]).forEach(function(p){ if(!p.origem && _origemMap[p.codigo]) p.origem = _origemMap[p.codigo]; });
+      (DB.produtos_filial||[]).forEach(function(p){ if(!p.origem && _origemMap[p.codigo]) p.origem = _origemMap[p.codigo]; });
+    }
     popularCondicoes();
     renderListaPedidos('');
     atualizarBadgePedidos();
@@ -2007,6 +2014,12 @@ function carregarPedido(numero) {
   numPedidoAtual = ped.numero;
   clienteAtual   = ped.cliente;
   itensPedido    = ped.itens || [];
+  /* Re-injeta campo 'origem' nos itens salvos antes da atualização do JSON */
+  if (DB.produtos && DB.produtos.length) {
+    var _om = {};
+    DB.produtos.forEach(function(p){ if(p.codigo && p.origem) _om[p.codigo] = p.origem; });
+    itensPedido.forEach(function(item){ if(item.prod && !item.prod.origem && _om[item.prod.codigo]) item.prod.origem = _om[item.prod.codigo]; });
+  }
   mostrarFicha(clienteAtual);
   document.getElementById('sel-condicao').value = ped.condicao || '';
   document.getElementById('sel-tabela').value   = ped.tabela  || 'matriz';
