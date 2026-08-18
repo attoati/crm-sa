@@ -1235,6 +1235,23 @@ function mostrarFicha(c) {
     html += '<div class="ficha-item ficha-full"><label>E-mail</label><span>' + emails + '</span></div>';
   }
   html += '</div>';
+  /* ── SUFRAMA / ZONA FRANCA ─────────────────────────────── */
+  var sufAtual = getSuframaCliente(c);
+  var codEsc = (c.codigo||'').replace(/'/g,"\\'");
+  html += '<div style="margin-top:12px;padding:10px 14px;border:1.5px solid rgba(0,230,118,.35);border-radius:8px;background:rgba(0,230,118,.04)">';
+  html += '<div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#00e676;text-transform:uppercase;margin-bottom:9px">&#9889; SUFRAMA / ZONA FRANCA DE MANAUS</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  html += '<button onclick="setSuframaUI(\''+codEsc+'\',null)" style="border-radius:6px;padding:6px 14px;font-size:11.5px;font-weight:700;cursor:pointer;border:1.5px solid '+(sufAtual===null?'#c0392b;background:#c0392b;color:#fff':'#666;background:transparent;color:#999')+'">✗ Sem SUFRAMA</button>';
+  html += '<button onclick="setSuframaUI(\''+codEsc+'\',\'ipi\')" style="border-radius:6px;padding:6px 14px;font-size:11.5px;font-weight:700;cursor:pointer;border:1.5px solid '+(sufAtual==='ipi'?'#f39c12;background:#f39c12;color:#fff':'#f39c12;background:transparent;color:#f39c12')+'">&#9889; Apenas IPI Isento</button>';
+  html += '<button onclick="setSuframaUI(\''+codEsc+'\',\'completo\')" style="border-radius:6px;padding:6px 14px;font-size:11.5px;font-weight:700;cursor:pointer;border:1.5px solid '+(sufAtual==='completo'?'#00e676;background:#00e676;color:#111':'#00e676;background:transparent;color:#00e676')+'">&#10003; SUFRAMA Completo</button>';
+  html += '</div>';
+  if (sufAtual === 'completo') {
+    html += '<div style="margin-top:8px;font-size:10.5px;color:rgba(0,230,118,.85);line-height:1.6">'
+          + '&#9679; Nacional: -15,48% (PIS+COFINS+ICMS) &nbsp;&#9679; Importado: -9,12% (PIS+COFINS) &nbsp;&#9679; IPI: isento</div>';
+  } else if (sufAtual === 'ipi') {
+    html += '<div style="margin-top:8px;font-size:10.5px;color:rgba(243,156,18,.85)">&#9679; IPI isento em todos os itens</div>';
+  }
+  html += '</div>';
   document.getElementById('ficha-content').innerHTML = html;
   var tc = document.getElementById('ficha-tooltip-content');
   if (tc) tc.innerHTML = html;
@@ -1268,6 +1285,17 @@ function renderClienteBarPedido(c) {
   html += '<div><span style="font-size:.65rem;letter-spacing:1px;color:var(--text2)">IE</span><br>' + (c.ie||'—') + '</div>';
   html += '<div><span style="font-size:.65rem;letter-spacing:1px;color:var(--text2)">MUNICIPIO/UF</span><br>' + (c.municipio||'—') + '/' + (c.estado||'—') + '</div>';
   html += '<div><span style="font-size:.65rem;letter-spacing:1px;color:var(--text2)">ICMS (' + (tab==='filial'?'Filial ES':'Matriz') + ')</span><br><b style="color:var(--orange)">' + (icmsVal*100).toFixed(2) + '%</b></div>';
+  /* Badge SUFRAMA */
+  var sufBar = getSuframaCliente(c);
+  if (sufBar === 'completo') {
+    html += '<div style="background:rgba(0,230,118,.15);border:1px solid rgba(0,230,118,.5);border-radius:6px;padding:4px 10px;text-align:center">'
+          + '<span style="font-size:9px;letter-spacing:1px;color:#00e676;font-weight:800;display:block">SUFRAMA</span>'
+          + '<b style="font-size:11px;color:#00e676">COMPLETO</b></div>';
+  } else if (sufBar === 'ipi') {
+    html += '<div style="background:rgba(243,156,18,.12);border:1px solid rgba(243,156,18,.4);border-radius:6px;padding:4px 10px;text-align:center">'
+          + '<span style="font-size:9px;letter-spacing:1px;color:#f39c12;font-weight:800;display:block">SUFRAMA</span>'
+          + '<b style="font-size:11px;color:#f39c12">IPI ISENTO</b></div>';
+  }
   html += '</div>';
   // Botão sugestão de reativação
   var reativBar = getReativacaoCliente(c);
@@ -1348,13 +1376,18 @@ function precoComICMS(prod) {
 
 /* Preco de tabela (com ICMS) sem o IPI embutido */
 function precoSemIPI(prod) {
+  /* SUFRAMA completo — substitui cálculo de ICMS pelos descontos de ZFM */
+  var suf = getSuframaCliente(clienteAtual);
+  if (suf === 'completo') {
+    var origem = ((prod.origem||'N')+'').toUpperCase();
+    var descSuf = (origem === 'I') ? SUFRAMA_DESC_IMPORTADO : SUFRAMA_DESC_NACIONAL;
+    return precoTabelaAjustado(prod) * (1 - descSuf);
+  }
   var tabAtual = document.getElementById('sel-tabela') ? document.getElementById('sel-tabela').value : 'matriz';
   var icms;
   if (tabAtual === 'filial') {
-    /* Tabela Filial ES: nao aplica desconto de ICMS para nenhum estado */
     icms = 0;
   } else if (temDescEspecialMatrizForaSP(prod)) {
-    /* Itens com desconto especial de 14% (Matriz, fora de SP): nao soma os 11.82% de ICMS padrao */
     icms = 0;
   } else {
     var estado   = clienteAtual ? clienteAtual.estado : null;
@@ -1366,9 +1399,39 @@ function precoSemIPI(prod) {
 
 /* Valor do IPI por unidade (em R$) */
 function valorIPIUnit(prod) {
+  if (getSuframaCliente(clienteAtual)) return 0; // IPI isento SUFRAMA
   var ipi = (typeof prod.ipi === 'number') ? prod.ipi : 0;
   if (!ipi) return 0;
   return precoComICMS(prod) - precoSemIPI(prod);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SUFRAMA / ZONA FRANCA DE MANAUS
+   Nacional : PIS 1,65% + COFINS 7,60% + ICMS 7% = 15,48%
+   Importado: PIS 1,65% + COFINS 7,60%           =  9,12%
+   IPI      : isento em todos os itens
+══════════════════════════════════════════════════════════════ */
+var SUFRAMA_DESC_NACIONAL  = 0.1548;
+var SUFRAMA_DESC_IMPORTADO = 0.0912;
+
+function getSuframaCliente(c) {
+  if (!c) return null;
+  var s = JSON.parse(localStorage.getItem('crm_suframa')||'{}');
+  return s[c.codigo||''] || null;
+}
+function setSuframaCliente(codigoCli, tipo) {
+  var s = JSON.parse(localStorage.getItem('crm_suframa')||'{}');
+  if (tipo) s[codigoCli] = tipo;
+  else delete s[codigoCli];
+  localStorage.setItem('crm_suframa', JSON.stringify(s));
+}
+function setSuframaUI(codigoCli, tipo) {
+  setSuframaCliente(codigoCli, tipo);
+  if (clienteAtual && clienteAtual.codigo === codigoCli) {
+    mostrarFicha(clienteAtual);
+    renderItensPedido();
+    atualizarTotais();
+  }
 }
 
 var _prodSelecionados = [];
@@ -2280,6 +2343,16 @@ function gerarHTMLPedido() {
   /* ── OBSERVACOES ── */
   var obs = document.getElementById('obs-pedido').value;
   if (obs) h += '<div style="margin-bottom:14px;padding:8px 12px;border:1px solid #dde;font-size:9pt;user-select:text;-webkit-user-select:text;"><b>Observacoes:</b> '+obs+'</div>';
+  /* ── BADGE SUFRAMA ── */
+  var _sufPdf = getSuframaCliente(clienteAtual);
+  if (_sufPdf) {
+    var _sufLabel = _sufPdf === 'completo'
+      ? 'SUFRAMA / ZONA FRANCA — Completo: Nacional -15,48% | Importado -9,12% | IPI Isento'
+      : 'SUFRAMA / ZONA FRANCA — IPI Isento em todos os itens';
+    h += '<div style="margin-bottom:14px;padding:7px 14px;background:#e8fff3;border-left:4px solid #00c853;border-radius:0 6px 6px 0;font-size:8.5pt;font-weight:700;color:#1b5e20">';
+    h += '&#9889; ' + _sufLabel;
+    h += '</div>';
+  }
   /* ── DISCLAIMER ICMS-ST ── */
   h += '<div style="margin-bottom:18px;padding:7px 12px;background:#f9f7ff;border-left:3px solid #7c5cbf;font-size:8pt;color:#555;font-style:italic">';
   h += 'Preços sem ICMS-ST. Sujeito à cobrança adicional conforme legislação do estado de destino.';
