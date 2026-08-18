@@ -1022,6 +1022,11 @@ fetch('CRM_DATA.json')
     atualizarBadgePedidos();
     carregarPedidosServidor();
     carregarPedidoPendente();
+    /* Atualiza footer com data da última atualização da tabela */
+    var elVer = document.getElementById('footer-crm-version');
+    if (elVer && DB._ultima_atualizacao) {
+      elVer.textContent = '⟳ Tabela: ' + DB._ultima_atualizacao;
+    }
   })
   .catch(function(err){
     /* Mesmo sem servidor, carrega pedidos do localStorage */
