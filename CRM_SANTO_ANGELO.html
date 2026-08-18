@@ -2301,7 +2301,7 @@ function gerarHTMLPedido() {
   h += '<th style="padding:5px 7px;border-bottom:2px solid #4b1d63;font-weight:700;letter-spacing:.3px;text-align:center">Desc%</th>';
   h += '<th style="padding:5px 7px;border-bottom:2px solid #4b1d63;font-weight:700;letter-spacing:.3px;text-align:right">Total c/IPI</th>';
   h += '</tr>';
-  var totalMerc = 0, totalIPIPdf = 0, totalDescPdf = 0;
+  var totalMerc = 0, totalIPIPdf = 0, totalDescPdf = 0, totalMercNacional = 0;
   var bdRow = '1px solid #d8d3ee';
   for (var i = 0; i < itensPedido.length; i++) {
     var item = itensPedido[i];
@@ -2324,6 +2324,8 @@ function gerarHTMLPedido() {
     totalMerc    += totSemIpi;
     totalIPIPdf  += totIpi;
     totalDescPdf += (descR > 0 ? descR : 0);
+    /* ICMS ZFM 7% incide apenas em produtos Nacionais */
+    if (((prod.origem||'N')+'').toUpperCase() !== 'I') totalMercNacional += totSemIpi;
     var ipiPct  = getSuframaCliente(clienteAtual) ? 'Isento' : (prod.ipi ? Math.round(prod.ipi*100)+'%' : '-');
     var bg = '#fff'; /* linha sempre branca — borda dá o ritmo visual */
     h += '<tr style="background:'+bg+'">';
@@ -2342,7 +2344,8 @@ function gerarHTMLPedido() {
   h += '</table>';
   /* ── TOTAIS em caixa à direita ── */
   var _sufTotais = getSuframaCliente(clienteAtual);
-  var icmsZFM = (_sufTotais === 'completo') ? totalMerc * 0.07 : 0;
+  /* ICMS ZFM 7% só sobre produtos Nacionais; Importados pagam apenas PIS+COFINS */
+  var icmsZFM = (_sufTotais === 'completo') ? totalMercNacional * 0.07 : 0;
   var totalFinal = totalMerc + totalIPIPdf - icmsZFM;
   h += '<div style="display:flex;justify-content:flex-end;margin-bottom:14px">';
   h += '<div style="min-width:300px;border:1.5px solid #d8d3ee;border-radius:8px;overflow:hidden;font-size:9pt">';
