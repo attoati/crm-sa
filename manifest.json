@@ -1,0 +1,17 @@
+{
+  "name": "CRM Santo Angelo",
+  "short_name": "CRM SA",
+  "description": "Sistema CRM de Vendas Santo Angelo",
+  "start_url": "CRM_SANTO_ANGELO.html",
+  "display": "standalone",
+  "background_color": "#f4f3fb",
+  "theme_color": "#6c4bf4",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "Logo%20Santo%20Angelo%20-%20Preto%20Sem%20Fundo.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}
