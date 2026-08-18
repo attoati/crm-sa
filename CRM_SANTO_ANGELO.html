@@ -1664,6 +1664,16 @@ function onObsItemChange(idx, val) {
   itensPedido[idx].obsItem = val;
 }
 
+/* Retorna origem do produto: busca no DB.produtos se não estiver no objeto salvo */
+function getOrigemProd(prod) {
+  if (prod && prod.origem) return prod.origem.toUpperCase();
+  if (prod && prod.codigo && DB.produtos) {
+    var dp = DB.produtos.find(function(x){ return x.codigo === prod.codigo; });
+    if (dp && dp.origem) return dp.origem.toUpperCase();
+  }
+  return 'N';
+}
+
 function precoBaseCalc(prod) {
   if (getSuframaCliente(clienteAtual)) return precoSemIPI(prod);
   return precoComICMS(prod);
@@ -1698,7 +1708,7 @@ function calcTotalLiquido() {
     var di = (item.descItem||0) / 100;
     var val = preco * qtd * (1 - descCond) * (1 - descCom) * (1 - di);
     total += val;
-    if (((item.prod.origem||'N')+'').toUpperCase() !== 'I') totalNac += val;
+    if (getOrigemProd(item.prod) !== 'I') totalNac += val;
   }
   var sufTot = getSuframaCliente(clienteAtual);
   if (sufTot === 'completo') total -= totalNac * 0.07;
@@ -1818,7 +1828,7 @@ function atualizarTotais() {
   if (getSuframaCliente(clienteAtual) === 'completo') {
     var _brutoNac = 0;
     for (var _zn = 0; _zn < itensPedido.length; _zn++) {
-      if (((itensPedido[_zn].prod.origem||'N')+'').toUpperCase() !== 'I') {
+      if (getOrigemProd(itensPedido[_zn].prod) !== 'I') {
         var _di = (itensPedido[_zn].descItem||0)/100;
         _brutoNac += precoBaseCalc(itensPedido[_zn].prod) * (parseInt(itensPedido[_zn].qtd)||1)
                      * (1-descCond) * (1-descCom) * (1-_di);
@@ -2371,7 +2381,7 @@ function gerarHTMLPedido() {
     totalIPIPdf  += totIpi;
     totalDescPdf += (descR > 0 ? descR : 0);
     /* ICMS ZFM 7% incide apenas em produtos Nacionais */
-    if (((prod.origem||'N')+'').toUpperCase() !== 'I') totalMercNacional += totSemIpi;
+    if (getOrigemProd(prod) !== 'I') totalMercNacional += totSemIpi;
     var ipiPct  = getSuframaCliente(clienteAtual) ? 'Isento' : (prod.ipi ? Math.round(prod.ipi*100)+'%' : '-');
     var bg = '#fff'; /* linha sempre branca — borda dá o ritmo visual */
     h += '<tr style="background:'+bg+'">';
