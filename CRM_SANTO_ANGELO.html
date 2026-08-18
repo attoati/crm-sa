@@ -8,8 +8,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CRM SA">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="Logo%20Santo%20Angelo%20-%20Preto%20Sem%20Fundo.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/Logo%20Santo%20Angelo%20-%20Preto%20Sem%20Fundo.png">
 <title>CRM Vendas — Santo Angelo</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -628,7 +628,7 @@ body { padding-bottom: 26px; }
 .topbar-pedidos{position:relative;flex-shrink:0}
 .topbar-pedidos-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:5px 11px;cursor:pointer;font-size:11.5px;display:flex;align-items:center;gap:5px;white-space:nowrap;font-weight:700}
 .topbar-pedidos-btn:hover{background:rgba(255,255,255,.2)}
-.topbar-pedidos-panel{position:absolute;top:calc(100% + 6px);left:0;width:370px;background:#1e1650;border:1px solid rgba(255,255,255,.15);border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.55);z-index:9000;padding:12px}
+.topbar-pedidos-panel{position:fixed;top:56px;width:380px;background:#1e1650;border:1px solid rgba(255,255,255,.15);border-radius:0 0 8px 8px;box-shadow:0 10px 40px rgba(0,0,0,.7);z-index:99999;padding:12px}
 .topbar-pedidos-panel input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:5px;padding:6px 10px;font-size:12px;width:100%;animation:none!important}
 .topbar-pedidos-panel input::placeholder{color:rgba(255,255,255,.42)}
 .topbar-actions{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0}
@@ -646,10 +646,58 @@ body { padding-bottom: 26px; }
 body{padding-top:56px!important}
 #boas-vindas{margin-left:0!important;margin-top:0!important}
 .container{margin:0 auto!important;max-width:1200px!important}
-/* card-ficha como strip abaixo do topbar */
-#card-ficha{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 20px;border-radius:0;box-shadow:none}
-#card-ficha .card-header{background:transparent;border:none;padding:0 0 4px;font-size:11px}
-#card-ficha .card-body{padding:0}
+/* strip CSS removido */
+
+/* ── FICHA CLIENTE: modal flutuante ───────────────────────────── */
+#ficha-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9400;display:none}
+#card-ficha{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:9500;width:720px;max-width:95vw;max-height:82vh;
+  overflow-y:auto;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;box-shadow:0 24px 80px rgba(0,0,0,.5);
+  padding:0;display:none
+}
+#card-ficha .card-header{
+  position:sticky;top:0;z-index:1;background:var(--card);
+  border-bottom:1px solid var(--border);padding:12px 18px;
+  display:flex;align-items:center;justify-content:space-between
+}
+#card-ficha .card-body{padding:16px 18px}
+/* Resumo compacto no topbar */
+#topbar-cli-resumo{
+  font-size:10px;color:rgba(255,255,255,.75);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-top:2px;display:none;align-items:center;gap:6px
+}
+#topbar-cli-resumo .tb-cli-tag{
+  background:rgba(108,75,244,.35);border:1px solid rgba(108,75,244,.5);
+  border-radius:3px;padding:1px 5px;font-size:9.5px;font-weight:700;letter-spacing:.3px
+}
+#topbar-cli-resumo .tb-dados-btn{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  color:#fff;border-radius:4px;padding:1px 7px;cursor:pointer;
+  font-size:9px;font-weight:700;letter-spacing:.3px;white-space:nowrap
+}
+
+
+/* ── TOOLTIP FICHA CLIENTE ─────────────────────────────────────────── */
+#ficha-tooltip{
+  position:fixed;z-index:99998;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;box-shadow:0 16px 60px rgba(0,0,0,.55);
+  padding:0;width:700px;max-width:92vw;max-height:75vh;
+  overflow-y:auto;display:none;pointer-events:auto
+}
+#ficha-tooltip .card-header{
+  position:sticky;top:0;background:var(--card);z-index:1;
+  border-bottom:1px solid var(--border);padding:10px 16px;
+  font-size:12px;font-weight:700;display:flex;align-items:center;
+  justify-content:space-between;letter-spacing:.5px;
+  color:var(--cyan)
+}
+#ficha-tooltip .card-body{padding:14px 16px}
+/* Cliente bar no pedido: cursor pointer no nome */
+#pedido-cliente-bar .cli-hover-trigger{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 
 </style>
 </head>
@@ -658,7 +706,7 @@ body{padding-top:56px!important}
 <div id="file-origin-warning" style="display:none;background:#c0392b;color:#fff;font-size:13px;text-align:center;padding:10px 20px;letter-spacing:0.3px;position:relative;z-index:9999">
   &#9888; <b>ATENCAO:</b> Voce abriu pelo computador (file://). Os pedidos salvos aqui sao <u>diferentes</u> dos pedidos no servidor.
   &nbsp;&nbsp;
-  <button onclick="window.location.href=window.location.href" style="background:var(--card);color:var(--red,#c0392b);border:1px solid var(--border);border-radius:4px;padding:4px 14px;font-weight:800;font-size:12px;cursor:pointer;margin-left:8px">
+  <button onclick="window.location.href=''+window.location.href.replace(/CRM_SANTO_ANGELO\.html.*/,'')+'CRM_SANTO_ANGELO.html'" style="background:var(--card);color:var(--red,#c0392b);border:1px solid var(--border);border-radius:4px;padding:4px 14px;font-weight:800;font-size:12px;cursor:pointer;margin-left:8px">
     &#9654; Abrir pelo Servidor
   </button>
   &nbsp;
@@ -761,6 +809,12 @@ body{padding-top:56px!important}
         oninput="buscaClienteAuto(this.value)" autocomplete="off">
       <div id="autocomplete-list" class="autocomplete-list" style="display:none"></div>
     </div>
+    <div id="topbar-cli-resumo">
+      <span id="tb-cli-tag" class="tb-cli-tag"></span>
+      <span id="tb-cli-nome-curto" style="max-width:180px;overflow:hidden;text-overflow:ellipsis"></span>
+      <span id="tb-cli-uf-icms" style="opacity:.7"></span>
+      <button class="tb-dados-btn" onclick="abrirFichaModal()">&#9432; Dados</button>
+    </div>
   </div>
 
   <!-- Pedidos Salvos -->
@@ -793,8 +847,12 @@ body{padding-top:56px!important}
 </div>
 
 <!-- FICHA DO CLIENTE (strip abaixo do topbar) -->
+<div id="ficha-backdrop" onclick="fecharFichaModal()"></div>
 <div id="card-ficha" style="display:none">
-  <div class="card-header"><span class="ico">&#9432;</span> Ficha do Cliente</div>
+  <div class="card-header">
+    <span><span class="ico">&#9432;</span> Ficha do Cliente</span>
+    <button onclick="fecharFichaModal()" style="background:#c0392b;border:none;color:#fff;border-radius:5px;padding:3px 10px;cursor:pointer;font-weight:700;font-size:13px">&#10005; Fechar</button>
+  </div>
   <div class="card-body" id="ficha-content"></div>
 </div>
 
@@ -937,7 +995,7 @@ fetch('CRM_DATA.json')
     atualizarBadgePedidos();
     var aviso = document.getElementById('aviso-origem');
     if (aviso) {
-      aviso.innerHTML = '⚠️ Dados de produtos não carregados — acesse via servidor HTTP para funcionalidade completa.';
+      aviso.innerHTML = '⚠️ Dados de produtos não carregados — acesse via <b>http://localhost:8788</b> para funcionalidade completa.';
       aviso.style.display = 'block';
       aviso.style.background = '#fff3cd';
       aviso.style.color = '#856404';
@@ -1145,9 +1203,20 @@ function mostrarFicha(c) {
   }
   html += '</div>';
   document.getElementById('ficha-content').innerHTML = html;
-  var fichaCard = document.getElementById('card-ficha');
-  fichaCard.style.display = 'block';
-  setTimeout(function(){ fichaCard.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 50);
+  var tc = document.getElementById('ficha-tooltip-content');
+  if (tc) tc.innerHTML = html;
+  // Resumo compacto no topbar
+  var resumo = document.getElementById('topbar-cli-resumo');
+  var tag = document.getElementById('tb-cli-tag');
+  var nomeCurto = document.getElementById('tb-cli-nome-curto');
+  var ufIcms = document.getElementById('tb-cli-uf-icms');
+  if (resumo) {
+    if (tag) tag.textContent = c.codigo || '';
+    if (nomeCurto) nomeCurto.textContent = c.fantasia || c.nome || '';
+    if (ufIcms) ufIcms.textContent = (c.estado || '') + ' | ICMS: ' + (icmsVal*100).toFixed(2) + '%';
+    resumo.style.display = 'flex';
+  }
+  // NÃO abrir modal automaticamente — aguardar clique em "Dados"
   renderClienteBarPedido(c);
 }
 
@@ -1158,9 +1227,10 @@ function renderClienteBarPedido(c) {
   var bar = document.getElementById('pedido-cliente-bar');
   var html = '<div style="display:flex;flex-wrap:wrap;gap:4px 28px;align-items:center;justify-content:space-between">';
   html += '<div><span style="font-size:.65rem;letter-spacing:1px;color:var(--text2)">CLIENTE</span><br>';
-  html += '<b style="color:var(--cyan);font-size:1.05rem">' + (c.codigo||'—') + '</b> &nbsp; <span style="font-weight:700">' + (c.nome||'—') + '</span>';
-  if (c.fantasia && c.fantasia !== c.nome) html += ' <span style="color:var(--cyan)">(' + c.fantasia + ')</span>';
-  html += '</div>';
+  html += '<b style="color:var(--cyan);font-size:1.05rem">' + (c.codigo||'—') + '</b> &nbsp; ';
+  html += '<span class="cli-hover-trigger" style="font-weight:700" onmouseenter="mostrarFichaTooltip(event)" onmouseleave="agendarOcultarFicha()" title="Passe o mouse para ver ficha completa">' + (c.nome||'—');
+  if (c.fantasia && c.fantasia !== c.nome) html += ' <span style="color:var(--cyan);font-weight:400">(' + c.fantasia + ')</span>';
+  html += '</span></div>';
   html += '<div><span style="font-size:.65rem;letter-spacing:1px;color:var(--text2)">CNPJ</span><br>' + (c.cnpj||'—') + '</div>';
   html += '<div><span style="font-size:.65rem;letter-spacing:1px;color:var(--text2)">IE</span><br>' + (c.ie||'—') + '</div>';
   html += '<div><span style="font-size:.65rem;letter-spacing:1px;color:var(--text2)">MUNICIPIO/UF</span><br>' + (c.municipio||'—') + '/' + (c.estado||'—') + '</div>';
@@ -1663,7 +1733,7 @@ function gerarNumero() {
    Isso garante que os pedidos NÃO SUMAM mesmo que o navegador limpe o storage.
    ──────────────────────────────────────────────────────────────────────────── */
 function syncPedidosServidor(pedidos) {
-  if (window.location.protocol !== 'http:') return; // file:// e https:// não têm servidor local
+  if (window.location.protocol !== 'http:') return; // file:// não tem servidor
   var json = JSON.stringify(pedidos);
   fetch('/salvar-pedidos', {
     method: 'POST',
@@ -1824,6 +1894,9 @@ function novoPedido() {
   itensPedido    = [];
   document.getElementById('busca-cliente').value = '';
   document.getElementById('card-ficha').style.display = 'none';
+  var bd = document.getElementById('ficha-backdrop'); if(bd) bd.style.display='none';
+  var rs = document.getElementById('topbar-cli-resumo'); if(rs) rs.style.display='none';
+  var inp = document.getElementById('busca-cliente'); if(inp) inp.value='';
   document.getElementById('pedido-cliente-bar').style.display = 'none';
   document.getElementById('sel-condicao').value = '';
   document.getElementById('sel-tabela').value   = 'matriz';
@@ -3106,7 +3179,7 @@ function abrirApresentacao() {
     win.style.width  = '82vw';
     win.style.height = '86vh';
   }
-  document.getElementById('iframe-apres').src = (window.location.href.replace(/CRM_SANTO_ANGELO\.html.*$/, '') + 'APRESENTACAO.html?origem=crm&t=' + Date.now());
+  document.getElementById('iframe-apres').src = '/APRESENTACAO.html?origem=crm&t=' + Date.now();
   document.getElementById('apres-minimized').style.display = 'none';
   bk.style.display  = 'block';
   win.style.display = 'flex';
@@ -3170,7 +3243,7 @@ function apresNovaJanela() {
 function _abrirPopupMonitor2(cli) {
   clearTimeout(_apres._mon2Timer);
   var qs = '?origem=crm' + (cli ? '&cli='+encodeURIComponent(cli) : '') + '&t='+Date.now();
-  var url = (window.location.href.replace(/CRM_SANTO_ANGELO\.html.*$/, '') + 'APRESENTACAO.html') + qs;
+  var url = 'APRESENTACAO.html' + qs;
   var w = Math.min(Math.round(screen.width * 0.55), 1400);
   var h = Math.round(screen.height * 0.92);
   var left = window.screen.width; // segundo monitor começa após o monitor principal
@@ -3336,7 +3409,20 @@ function togglePedidosPanel(e) {
   if (e) e.stopPropagation();
   var p = document.getElementById('pedidos-panel');
   if (!p) return;
-  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  var showing = p.style.display !== 'none';
+  if (showing) {
+    p.style.display = 'none';
+  } else {
+    // Posicionar o panel fixo alinhado ao botão
+    var btn = e && e.currentTarget ? e.currentTarget : (e && e.target ? e.target : null);
+    if (btn) {
+      var rect = btn.getBoundingClientRect();
+      var panelW = 380;
+      var left = Math.min(rect.left, window.innerWidth - panelW - 8);
+      p.style.left = Math.max(4, left) + 'px';
+    }
+    p.style.display = 'block';
+  }
 }
 document.addEventListener('click', function(e) {
   var tp = document.querySelector('.topbar-pedidos');
@@ -3345,6 +3431,66 @@ document.addEventListener('click', function(e) {
     if (p) p.style.display = 'none';
   }
 });
+
+
+function abrirFichaModal() {
+  var bd = document.getElementById('ficha-backdrop');
+  var fc = document.getElementById('card-ficha');
+  if (bd) bd.style.display = 'block';
+  if (fc) fc.style.display = 'block';
+}
+function fecharFichaModal() {
+  var bd = document.getElementById('ficha-backdrop');
+  var fc = document.getElementById('card-ficha');
+  if (bd) bd.style.display = 'none';
+  if (fc) fc.style.display = 'none';
+}
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') fecharFichaModal();
+});
+
+<div id="ficha-tooltip" onmouseenter="cancelarOcultarFicha()" onmouseleave="agendarOcultarFicha()">
+  <div class="card-header">
+    <span>&#9432; FICHA DO CLIENTE</span>
+    <button onclick="ocultarFichaTooltip()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:16px;line-height:1">&#10005;</button>
+  </div>
+  <div class="card-body" id="ficha-tooltip-content"></div>
+</div>
+
+var _fichaOcultarTimer = null;
+function mostrarFichaTooltip(e) {
+  cancelarOcultarFicha();
+  var tip = document.getElementById('ficha-tooltip');
+  if (!tip) return;
+  // Posicionar acima do elemento trigger
+  var rect = e.target.closest ? e.target.closest('[onmouseenter]').getBoundingClientRect() : e.target.getBoundingClientRect();
+  var tipW = Math.min(700, window.innerWidth * 0.92);
+  var left = Math.max(8, Math.min(rect.left, window.innerWidth - tipW - 8));
+  // Tentar mostrar acima; se não couber, mostrar abaixo
+  var spaceAbove = rect.top - 10;
+  var spaceBelow = window.innerHeight - rect.bottom - 10;
+  tip.style.width = tipW + 'px';
+  tip.style.maxHeight = Math.min(Math.max(spaceAbove, spaceBelow) - 10, window.innerHeight * 0.7) + 'px';
+  tip.style.left = left + 'px';
+  if (spaceAbove > spaceBelow && spaceAbove > 150) {
+    tip.style.top = 'auto';
+    tip.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+  } else {
+    tip.style.bottom = 'auto';
+    tip.style.top = (rect.bottom + 4) + 'px';
+  }
+  tip.style.display = 'block';
+}
+function agendarOcultarFicha() {
+  _fichaOcultarTimer = setTimeout(ocultarFichaTooltip, 250);
+}
+function cancelarOcultarFicha() {
+  if (_fichaOcultarTimer) { clearTimeout(_fichaOcultarTimer); _fichaOcultarTimer = null; }
+}
+function ocultarFichaTooltip() {
+  var tip = document.getElementById('ficha-tooltip');
+  if (tip) tip.style.display = 'none';
+}
 
 </body>
 </html>
