@@ -2245,7 +2245,7 @@ function gerarHTMLPedido() {
     var totCIpi   = totSemIpi + totIpi;
     /* Desconto % combinado */
     var descTotalPct = 1 - (1-descCond)*(1-descCom)*(1-di);
-    var descPctLabel = descTotalPct > 0.001 ? (descTotalPct*100).toFixed(1)+'%' : '-';
+    var descPctLabel = descTotalPct > 0.001 ? (parseFloat((descTotalPct*100).toFixed(2)))+'%' : '-';
     /* Desconto R$ para totais */
     var precoTab = prod.preco_tabela || precoBase;
     var descR = (precoTab - precoLiquido) * qtd;
@@ -2280,9 +2280,19 @@ function gerarHTMLPedido() {
   /* ── OBSERVACOES ── */
   var obs = document.getElementById('obs-pedido').value;
   if (obs) h += '<div style="margin-bottom:14px;padding:8px 12px;border:1px solid #dde;font-size:9pt;user-select:text;-webkit-user-select:text;"><b>Observacoes:</b> '+obs+'</div>';
+  /* ── DISCLAIMER ICMS-ST ── */
+  h += '<div style="margin-bottom:18px;padding:7px 12px;background:#f9f7ff;border-left:3px solid #7c5cbf;font-size:8pt;color:#555;font-style:italic">';
+  h += 'Preços sem ICMS-ST. Sujeito à cobrança adicional conforme legislação do estado de destino.';
+  h += '</div>';
   /* ── ASSINATURAS ── */
-  h += '<div style="display:flex;gap:40px;margin-top:30px;font-size:8.5pt">';
-  h += '<div style="flex:1;border-top:1px solid #555;padding-top:4px;text-align:center">Vendedor</div>';
+  var _vend = JSON.parse(localStorage.getItem('crm_vendedor')||'{}');
+  var _vendNome = _vend.nome || '';
+  var _vendWpp  = _vend.whatsapp || '';
+  h += '<div style="display:flex;gap:40px;margin-top:10px;font-size:8.5pt">';
+  h += '<div style="flex:1;border-top:1px solid #555;padding-top:4px;text-align:center">Vendedor'
+     + (_vendNome ? '<br><b>'+_vendNome+'</b>' : '')
+     + (_vendWpp  ? '<br><span style="color:#888">'+_vendWpp+'</span>' : '')
+     + '</div>';
   h += '<div style="flex:1;border-top:1px solid #555;padding-top:4px;text-align:center">Cliente / Responsavel</div>';
   h += '<div style="flex:1;border-top:1px solid #555;padding-top:4px;text-align:center">Aprovacao</div>';
   h += '</div>';
@@ -2345,7 +2355,7 @@ function abrirModalPedido(numero) {
     totalIpiMp+= ipiUnit * q2;
     totalDescMp += pr.preco_tabela ? (pr.preco_tabela - precoDesc) * q2 : 0;
     var descTotPct = 1 - (1-descCond2)*(1-descCom2)*(1-di2);
-    var descPctMp  = descTotPct > 0.001 ? (descTotPct*100).toFixed(1)+'%' : '-';
+    var descPctMp  = descTotPct > 0.001 ? (parseFloat((descTotPct*100).toFixed(2)))+'%' : '-';
     html += '<div class="mp-item-row">';
     html += '<span style="font-size:10px;line-height:1.3">' + (pr.descricao||pr.codigo||'-') + '</span>';
     html += '<span style="text-align:center;font-weight:700">' + q2 + '</span>';
@@ -3146,8 +3156,25 @@ window.addEventListener('appinstalled', function() {
   <div id="splash-credit" style="font-size:10px;color:rgba(164,140,220,.55);letter-spacing:2px;text-transform:uppercase;font-weight:500;margin-bottom:42px">
     Criado e Desenvolvido por <span style="color:#a78bfa;font-weight:800">JAIME ATTOATI</span>
   </div>
+  <!-- Formulário de vendedor (aparece antes de entrar) -->
+  <div id="splash-form" style="display:none;flex-direction:column;align-items:center;gap:12px;width:280px">
+    <div style="font-size:11px;color:rgba(196,168,240,.8);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:4px">Identificação do Vendedor</div>
+    <input id="splash-input-nome" type="text" placeholder="Seu nome completo"
+      style="width:100%;background:rgba(255,255,255,.08);border:1.5px solid rgba(108,75,244,.6);color:#fff;border-radius:8px;padding:10px 14px;font-size:13px;outline:none;box-sizing:border-box"
+      oninput="this.style.borderColor='rgba(108,75,244,.9)'"
+      onkeydown="if(event.key==='Enter')document.getElementById('splash-input-wpp').focus()">
+    <input id="splash-input-wpp" type="tel" placeholder="WhatsApp (ex: 55 11 99999-9999)"
+      style="width:100%;background:rgba(255,255,255,.08);border:1.5px solid rgba(108,75,244,.6);color:#fff;border-radius:8px;padding:10px 14px;font-size:13px;outline:none;box-sizing:border-box"
+      oninput="this.style.borderColor='rgba(108,75,244,.9)'"
+      onkeydown="if(event.key==='Enter')splashConfirmar()">
+    <button onclick="splashConfirmar()"
+      style="background:linear-gradient(135deg,#6c4bf4,#4f8ef7);color:#fff;border:none;border-radius:50px;padding:9px 36px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 22px rgba(108,75,244,.5);transition:all .2s;width:100%">
+      &#10003; CONFIRMAR E ENTRAR
+    </button>
+    <span id="splash-form-err" style="font-size:10px;color:#f77;display:none">Preencha o nome para continuar.</span>
+  </div>
   <!-- Botão Entrar -->
-  <button id="splash-btn" onclick="fecharSplash()"
+  <button id="splash-btn" onclick="splashClicarEntrar()"
     style="background:linear-gradient(135deg,#6c4bf4,#4f8ef7);color:#fff;border:none;border-radius:50px;padding:9px 36px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 22px rgba(108,75,244,.5);transition:all .2s">
     &#9654; ENTRAR
   </button>
@@ -3210,6 +3237,28 @@ window.addEventListener('appinstalled', function() {
 // ================================================================
 //  SPLASH SCREEN
 // ================================================================
+function splashClicarEntrar() {
+  var saved = JSON.parse(localStorage.getItem('crm_vendedor')||'{}');
+  if (saved.nome) {
+    // Já tem dados salvos — entra direto
+    fecharSplash();
+    return;
+  }
+  // Mostra formulário
+  document.getElementById('splash-btn').style.display = 'none';
+  var f = document.getElementById('splash-form');
+  f.style.display = 'flex';
+  setTimeout(function(){ document.getElementById('splash-input-nome').focus(); }, 100);
+}
+function splashConfirmar() {
+  var nome = (document.getElementById('splash-input-nome').value||'').trim();
+  var wpp  = (document.getElementById('splash-input-wpp').value||'').trim();
+  var err  = document.getElementById('splash-form-err');
+  if (!nome) { err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  localStorage.setItem('crm_vendedor', JSON.stringify({nome:nome, whatsapp:wpp}));
+  fecharSplash();
+}
 function fecharSplash() {
   var splash = document.getElementById('splash');
   splash.style.transition = 'opacity .7s ease, transform .7s ease';
