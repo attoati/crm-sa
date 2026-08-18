@@ -2324,7 +2324,7 @@ function gerarHTMLPedido() {
     totalMerc    += totSemIpi;
     totalIPIPdf  += totIpi;
     totalDescPdf += (descR > 0 ? descR : 0);
-    var ipiPct  = prod.ipi ? Math.round(prod.ipi*100)+'%' : '-';
+    var ipiPct  = getSuframaCliente(clienteAtual) ? 'Isento' : (prod.ipi ? Math.round(prod.ipi*100)+'%' : '-');
     var bg = '#fff'; /* linha sempre branca — borda dá o ritmo visual */
     h += '<tr style="background:'+bg+'">';
     h += '<td style="padding:4px 7px;border-bottom:'+bdRow+';font-family:monospace;font-size:8.5pt">'+(prod.codigo||'')+'</td>';
@@ -2341,31 +2341,20 @@ function gerarHTMLPedido() {
   }
   h += '</table>';
   /* ── TOTAIS em caixa à direita ── */
-  var totalFinal = totalMerc + totalIPIPdf;
+  var _sufTotais = getSuframaCliente(clienteAtual);
+  var icmsZFM = (_sufTotais === 'completo') ? totalMerc * 0.07 : 0;
+  var totalFinal = totalMerc + totalIPIPdf - icmsZFM;
   h += '<div style="display:flex;justify-content:flex-end;margin-bottom:14px">';
   h += '<div style="min-width:300px;border:1.5px solid #d8d3ee;border-radius:8px;overflow:hidden;font-size:9pt">';
   h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444">Total Mercadoria</span><span style="font-weight:600">'+fmt(totalMerc)+'</span></div>';
   h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444;font-weight:600">IPI</span><span style="color:#444;font-weight:600">'+fmt(totalIPIPdf)+'</span></div>';
   if (totalDescPdf > 0.01) h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444">Desconto</span><span style="color:#444">- '+fmt(totalDescPdf)+'</span></div>';
+  if (icmsZFM > 0.01) h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444">ICMS ZFM 7%</span><span style="color:#444">- '+fmt(icmsZFM)+'</span></div>';
   h += '<div style="display:flex;justify-content:space-between;padding:8px 14px;background:#4b1d63"><span style="color:#fff;font-weight:700;font-size:11pt">Total</span><span style="color:#fff;font-weight:700;font-size:11pt">'+fmt(totalFinal)+'</span></div>';
   h += '</div></div>';
   /* ── OBSERVACOES ── */
   var obs = document.getElementById('obs-pedido').value;
   if (obs) h += '<div style="margin-bottom:14px;padding:8px 12px;border:1px solid #dde;font-size:9pt;user-select:text;-webkit-user-select:text;"><b>Observacoes:</b> '+obs+'</div>';
-  /* ── BADGE SUFRAMA ── */
-  var _sufPdf = getSuframaCliente(clienteAtual);
-  if (_sufPdf) {
-    var _sufLabel = _sufPdf === 'completo'
-      ? 'SUFRAMA / ZONA FRANCA — Preço DIF × (1-9,12% PIS+COFINS) | IPI Isento'
-      : 'SUFRAMA / ZONA FRANCA — IPI Isento em todos os itens';
-    h += '<div style="margin-bottom:14px;padding:7px 14px;background:#e8fff3;border-left:4px solid #00c853;border-radius:0 6px 6px 0;font-size:8.5pt;font-weight:700;color:#1b5e20">';
-    h += '&#9889; ' + _sufLabel;
-    h += '</div>';
-  }
-  /* ── DISCLAIMER ICMS-ST ── */
-  h += '<div style="margin-bottom:18px;padding:7px 12px;background:#f9f7ff;border-left:3px solid #7c5cbf;font-size:8pt;color:#555;font-style:italic">';
-  h += 'Preços sem ICMS-ST. Sujeito à cobrança adicional conforme legislação do estado de destino.';
-  h += '</div>';
   /* ── ASSINATURAS ── */
   var _vend = JSON.parse(localStorage.getItem('crm_vendedor')||'{}');
   var _vendNome = _vend.nome || '';
@@ -2378,7 +2367,11 @@ function gerarHTMLPedido() {
   h += '<div style="flex:1;border-top:1px solid #555;padding-top:4px;text-align:center">Cliente / Responsavel</div>';
   h += '<div style="flex:1;border-top:1px solid #555;padding-top:4px;text-align:center">Aprovacao</div>';
   h += '</div>';
-  h += '<div style="margin-top:16px;border-top:1px solid #dde;padding-top:6px;font-size:7.5pt;color:#aaa;text-align:center">';
+  /* ── DISCLAIMER ICMS-ST (abaixo das assinaturas, centralizado) ── */
+  h += '<div style="margin-top:14px;font-size:7.5pt;color:#777;font-style:italic;text-align:center">';
+  h += 'Preços sem ICMS-ST. Sujeito à cobrança adicional conforme legislação do estado de destino.';
+  h += '</div>';
+  h += '<div style="margin-top:10px;border-top:1px solid #dde;padding-top:6px;font-size:7.5pt;color:#aaa;text-align:center">';
   h += 'CRM Vendas - Santo Angelo | ' + data + ' | Desenvolvido por JAIME ATTOATI';
   h += '</div></div>';
   return h;
