@@ -64,11 +64,7 @@ body{background-image:
 }
 .sidebar-brand img{height:40px;width:auto;display:block;filter:brightness(0) invert(1)}
 .sidebar-brand .header-sub{font-size:.68rem;color:rgba(255,255,255,.55);letter-spacing:2px;text-transform:uppercase}
-.sidebar-brand .dot{
-  width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;
-  background:var(--orange);box-shadow:0 0 10px rgba(255,122,61,.6);
-  animation:pulse 2s infinite;
-}
+.sidebar-brand .dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:6px;background:#00e676!important;box-shadow:0 0 12px rgba(0,230,118,1)!important;animation:blinkGreen 1.5s ease-in-out infinite!important}
 .sidebar-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
 .sidebar-body::-webkit-scrollbar{width:6px}
 .sidebar-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
@@ -97,7 +93,7 @@ body{background-image:
 .sidebar #ficha-content .ficha-highlight{color:var(--orange)!important}
 
 /* LAYOUT */
-#boas-vindas{margin-left:0}
+#boas-vindas{position:fixed;top:0;left:0;right:0;height:22px;background:linear-gradient(90deg,#4a2fa0,#2c2060,#4a2fa0);color:#fff;display:flex;align-items:center;justify-content:center;z-index:500;border-bottom:1px solid rgba(108,75,244,.4);text-align:center;font-size:11px;font-weight:300;letter-spacing:1.5px;text-transform:uppercase}
 .container{
   display:block;
   padding:12px 16px;
@@ -555,7 +551,7 @@ button:active::after{width:200px;height:200px;opacity:0;transition:0s}
   50%{box-shadow:0 0 0 4px rgba(108,75,244,.35);border-color:var(--cyan,#6c4bf4)}
 }
 #busca-produto{animation:pulseBorder 1.6s ease-in-out infinite}
-input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not(.topbar-client input):not(:focus),
+input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not(:focus),
 select:not(:focus),
 textarea:not(:focus){animation:pulseBorder 1.6s ease-in-out infinite}
 input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus,
@@ -595,7 +591,7 @@ select:focus,textarea:focus{animation:none}
 #footer-crm {
   position: fixed;
   bottom: 0;
-  left: 280px;
+  left: 0;
   right: 0;
   background: var(--card);
   border-top: 1px solid var(--border);
@@ -612,27 +608,28 @@ select:focus,textarea:focus{animation:none}
 body { padding-bottom: 26px; }
 
 /* ── TOPBAR (substitui sidebar) ───────────────────────────────── */
-.topbar{position:fixed;top:0;left:0;right:0;height:56px;z-index:300;
+.topbar{position:fixed;top:22px;left:0;right:0;height:82px;z-index:300;
   background:linear-gradient(135deg,#2c2060 0%,#1a1238 100%);
-  color:#fff;display:flex;align-items:center;gap:10px;padding:0 14px;
+  color:#fff;display:flex;align-items:center;gap:12px;padding:0 16px;
   box-shadow:0 3px 20px rgba(0,0,0,.35)}
 .topbar-logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.topbar-logo img{height:34px;width:auto;filter:brightness(0) invert(1)}
-.topbar-logo .header-sub{font-size:.58rem;color:rgba(255,255,255,.55);letter-spacing:1.5px;text-transform:uppercase;line-height:1.3}
-.topbar-logo .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px;background:var(--orange);box-shadow:0 0 6px rgba(255,122,61,.6);animation:pulse 2s infinite}
-.topbar-client{flex:1;min-width:140px;max-width:320px;position:relative}
-.topbar-client input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:6px 11px;width:100%;font-size:12.5px;animation:none!important}
+.topbar-logo img{height:66px;width:auto;filter:brightness(0) invert(1)}
+.topbar-logo .header-sub{font-size:.58rem;letter-spacing:1.5px;text-transform:uppercase;line-height:1.4}
+.topbar-logo .dot{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:6px;background:#00e676!important;box-shadow:0 0 10px rgba(0,230,118,.9)!important;animation:blinkGreen 1.5s ease-in-out infinite!important}
+.topbar-client{flex:1;min-width:180px;max-width:360px;position:relative}
+.topbar-client input{background:rgba(255,255,255,.06);border:1.5px solid rgba(108,75,244,.5);color:#fff;border-radius:6px;padding:6px 11px;width:100%;font-size:12.5px;animation:pulseBorder 1.6s ease-in-out infinite}
 .topbar-client input::placeholder{color:rgba(255,255,255,.42)}
-.topbar-client input:focus{border-color:rgba(255,170,60,.8);box-shadow:0 0 0 3px rgba(255,122,61,.2);animation:none!important}
-.topbar-client #autocomplete-list{position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:9999;max-height:320px;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-radius:0 0 8px 8px;box-shadow:0 8px 30px rgba(0,0,0,.3)}
-.topbar-pedidos{position:relative;flex-shrink:0}
-.topbar-pedidos-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:5px 11px;cursor:pointer;font-size:11.5px;display:flex;align-items:center;gap:5px;white-space:nowrap;font-weight:700}
+.topbar-client input:focus{border-color:rgba(255,170,60,.9);box-shadow:0 0 0 3px rgba(255,122,61,.25);animation:none!important;outline:none}
+
+.topbar-client #autocomplete-list{position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:99999;max-height:320px;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-radius:0 0 8px 8px;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.topbar-pedidos{position:relative;flex-shrink:0;display:flex;align-items:center}
+.topbar-pedidos-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:5px;height:30px;padding:0 11px;cursor:pointer;font-size:11px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-weight:700}
 .topbar-pedidos-btn:hover{background:rgba(255,255,255,.2)}
-.topbar-pedidos-panel{position:fixed;top:56px;width:380px;background:#1e1650;border:1px solid rgba(255,255,255,.15);border-radius:0 0 8px 8px;box-shadow:0 10px 40px rgba(0,0,0,.7);z-index:99999;padding:12px}
+.topbar-pedidos-panel{position:fixed;top:104px;width:380px;background:#1e1650;border:1px solid rgba(255,255,255,.15);border-radius:0 0 8px 8px;box-shadow:0 10px 40px rgba(0,0,0,.7);z-index:99999;padding:12px}
 .topbar-pedidos-panel input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:5px;padding:6px 10px;font-size:12px;width:100%;animation:none!important}
 .topbar-pedidos-panel input::placeholder{color:rgba(255,255,255,.42)}
-.topbar-actions{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0}
-.tb-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.topbar-actions{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:nowrap}
+.tb-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:5px;height:30px;padding:0 11px;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap;transition:background .2s;display:inline-flex;align-items:center;gap:4px}
 .tb-btn:hover{background:rgba(255,255,255,.22)}
 .tb-btn.tb-orange{background:rgba(255,122,61,.22);border-color:rgba(255,122,61,.4)}
 .tb-btn.tb-orange:hover{background:rgba(255,122,61,.38)}
@@ -643,7 +640,7 @@ body { padding-bottom: 26px; }
 /* Sidebar → oculta */
 .sidebar{display:none!important}
 /* Layout full-width com topbar */
-body{padding-top:56px!important}
+body{padding-top:104px!important}
 #boas-vindas{margin-left:0!important;margin-top:0!important}
 .container{margin:0 auto!important;max-width:1200px!important}
 /* strip CSS removido */
@@ -664,20 +661,9 @@ body{padding-top:56px!important}
 }
 #card-ficha .card-body{padding:16px 18px}
 /* Resumo compacto no topbar */
-#topbar-cli-resumo{
-  font-size:10px;color:rgba(255,255,255,.75);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  margin-top:2px;display:none;align-items:center;gap:6px
-}
-#topbar-cli-resumo .tb-cli-tag{
-  background:rgba(108,75,244,.35);border:1px solid rgba(108,75,244,.5);
-  border-radius:3px;padding:1px 5px;font-size:9.5px;font-weight:700;letter-spacing:.3px
-}
-#topbar-cli-resumo .tb-dados-btn{
-  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
-  color:#fff;border-radius:4px;padding:1px 7px;cursor:pointer;
-  font-size:9px;font-weight:700;letter-spacing:.3px;white-space:nowrap
-}
+#topbar-cli-resumo{font-size:10.5px;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;display:none;align-items:center;gap:8px;padding:2px 0}
+#topbar-cli-resumo .tb-cli-tag{background:rgba(108,75,244,.5);border:1px solid rgba(108,75,244,.7);border-radius:4px;padding:2px 7px;font-size:9.5px;font-weight:800;letter-spacing:.5px;color:#c8b8ff}
+#topbar-cli-resumo .tb-dados-btn{background:rgba(108,75,244,.4);border:1px solid rgba(108,75,244,.6);color:#fff;border-radius:4px;padding:2px 9px;cursor:pointer;font-size:9.5px;font-weight:800;letter-spacing:.3px;white-space:nowrap;transition:background .15s}
 
 
 /* ── TOOLTIP FICHA CLIENTE ─────────────────────────────────────────── */
@@ -699,6 +685,14 @@ body{padding-top:56px!important}
 /* Cliente bar no pedido: cursor pointer no nome */
 #pedido-cliente-bar .cli-hover-trigger{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 
+
+@keyframes blinkGreen{0%,100%{opacity:1;box-shadow:0 0 12px rgba(0,230,118,1)}50%{opacity:.4;box-shadow:0 0 4px rgba(0,230,118,.3)}}
+.topbar-logo .head-title{color:#fff;font-weight:800;font-size:14px;letter-spacing:1px}
+.topbar-logo .head-sub{color:rgba(255,255,255,.55);font-size:10px;letter-spacing:1.5px}
+
+
+  50%{box-shadow:0 0 0 5px rgba(108,75,244,.55);border-color:#8b6ff7}
+}
 </style>
 </head>
 <body>
@@ -799,7 +793,7 @@ body{padding-top:56px!important}
   <!-- Logo -->
   <div class="topbar-logo">
     <img src="Logo%20Santo%20Angelo%20-%20Preto%20Sem%20Fundo.png" alt="SA">
-    <div class="header-sub" style="letter-spacing:1.5px"><span class="dot"></span>CRM VENDAS<br>SISTEMA DE PEDIDOS</div>
+    <div class="header-sub" style="letter-spacing:1.5px"><span class="dot"></span><span class="head-title">CRM VENDAS</span><br><span class="head-sub">SISTEMA DE PEDIDOS</span></div>
   </div>
 
   <!-- Busca Cliente -->
@@ -811,27 +805,20 @@ body{padding-top:56px!important}
     </div>
     <div id="topbar-cli-resumo">
       <span id="tb-cli-tag" class="tb-cli-tag"></span>
-      <span id="tb-cli-nome-curto" style="max-width:180px;overflow:hidden;text-overflow:ellipsis"></span>
-      <span id="tb-cli-uf-icms" style="opacity:.7"></span>
-      <button class="tb-dados-btn" onclick="abrirFichaModal()">&#9432; Dados</button>
+      <span id="tb-cli-nome-curto" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;font-weight:600"></span>
+      <span id="tb-cli-uf-icms" style="opacity:.65;font-size:9.5px"></span>
+      <button class="tb-dados-btn" onclick="abrirFichaModal()">&#9432; DADOS</button>
     </div>
   </div>
 
   <!-- Pedidos Salvos -->
   <div class="topbar-pedidos">
-    <button class="topbar-pedidos-btn" onclick="togglePedidosPanel(event)">
+    <button id="btn-pedidos-toggle" class="topbar-pedidos-btn" onclick="event.stopPropagation();abrirFecharPedidos(this)">
       &#9776; Pedidos
       <span id="badge-pedidos" class="badge" style="display:none;background:#e6453c;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:800">0</span>
       &#9660;
     </button>
-    <div id="pedidos-panel" class="topbar-pedidos-panel" style="display:none">
-      <div style="display:flex;gap:6px;margin-bottom:8px">
-        <input id="busca-pedido" type="text" placeholder="Buscar por nr ou cliente..."
-          style="flex:1" oninput="renderListaPedidos(this.value)">
-        <button class="btn-green btn-sm" onclick="novoPedido()">+ Novo</button>
-      </div>
-      <div id="lista-pedidos" style="max-height:300px;overflow-y:auto"></div>
-    </div>
+
   </div>
 
   <!-- Ações -->
@@ -839,7 +826,7 @@ body{padding-top:56px!important}
     <button class="tb-btn tb-orange" onclick="abrirPainelReativ()">&#9889; Reativa&#231;&#227;o</button>
     <button class="tb-btn tb-blue" onclick="abrirApresentacao()">&#128202; Apresenta&#231;&#227;o</button>
     <button class="tb-btn" onclick="exportarPedidos()">&#8595; Exportar</button>
-    <label class="tb-btn tb-purple" style="cursor:pointer">&#8593; Importar
+    <label class="tb-btn tb-purple" style="cursor:pointer">&#8593; IMPORTAR
       <input type="file" accept=".json" style="display:none" onchange="importarPedidos(this)">
     </label>
     <button class="tb-btn" onclick="abrirConfiguracoes()" title="Configura&#231;&#245;es / Tema">&#9881;&#65039; Config</button>
@@ -858,12 +845,7 @@ body{padding-top:56px!important}
 
 
 <!-- BOAS VINDAS -->
-<div id="boas-vindas" style="background:linear-gradient(135deg,rgba(108,75,244,.07),rgba(255,122,61,.05));border-bottom:1px solid var(--border);padding:8px 24px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
-  <span style="font-size:13.5px;font-weight:700;color:var(--cyan);letter-spacing:.5px">&#127881; Bem vindo ao CRM de Vendas da SANTO ANGELO</span>
-  <span style="color:var(--text2);font-size:13px">— vamos gerar bons Neg&#243;cios!</span>
-  <span style="color:var(--border)">|</span>
-  <span style="font-size:11px;color:var(--purple);letter-spacing:1px;text-transform:uppercase">Desenvolvido por JAIME ATTOATI</span>
-</div>
+<div id="boas-vindas"><span style="font-size:13px;font-weight:600;letter-spacing:.5px">&#9733; Criado e Desenvolvido por Jaime Attoati &nbsp;&mdash;&nbsp; <span style="font-size:12px;font-weight:400;opacity:.85">Vamos gerar bons Neg&#243;cios!</span></span></div>
 
 <div class="container">
 
@@ -1228,7 +1210,7 @@ function renderClienteBarPedido(c) {
   var html = '<div style="display:flex;flex-wrap:wrap;gap:4px 28px;align-items:center;justify-content:space-between">';
   html += '<div><span style="font-size:.65rem;letter-spacing:1px;color:var(--text2)">CLIENTE</span><br>';
   html += '<b style="color:var(--cyan);font-size:1.05rem">' + (c.codigo||'—') + '</b> &nbsp; ';
-  html += '<span class="cli-hover-trigger" style="font-weight:700" onmouseenter="mostrarFichaTooltip(event)" onmouseleave="agendarOcultarFicha()" title="Passe o mouse para ver ficha completa">' + (c.nome||'—');
+  html += '<span class="cli-hover-trigger" data-ficha-hover="1" style="font-weight:700;cursor:pointer" onmouseenter="mostrarFichaTooltip(event)" onmouseleave="agendarOcultarFicha()" title="Passe o mouse para ver ficha completa">' + (c.nome||'—');
   if (c.fantasia && c.fantasia !== c.nome) html += ' <span style="color:var(--cyan);font-weight:400">(' + c.fantasia + ')</span>';
   html += '</span></div>';
   html += '<div><span style="font-size:.65rem;letter-spacing:1px;color:var(--text2)">CNPJ</span><br>' + (c.cnpj||'—') + '</div>';
@@ -2919,6 +2901,32 @@ function confirmarSugestao() {
   if (adicionados > 0 || naoEncontrados > 0) alert(msg);
 }
 
+
+// ── Painel Pedidos ────────────────────────────────────────────
+function abrirFecharPedidos(btn) {
+  var p = document.getElementById('pedidos-panel');
+  if (!p) return;
+  if (p.style.display !== 'none') {
+    p.style.display = 'none';
+    return;
+  }
+  if (btn) {
+    var r = btn.getBoundingClientRect();
+    p.style.left = Math.max(4, Math.min(r.left, window.innerWidth - 390)) + 'px';
+  }
+  p.style.display = 'block';
+  renderListaPedidos(document.getElementById('busca-pedido') ? document.getElementById('busca-pedido').value : '');
+}
+document.addEventListener('click', function(e) {
+  var p = document.getElementById('pedidos-panel');
+  var btn = document.getElementById('btn-pedidos-toggle');
+  if (p && p.style.display !== 'none') {
+    if (btn && !btn.contains(e.target) && !p.contains(e.target)) {
+      p.style.display = 'none';
+    }
+  }
+});
+
 </script>
 
 <!-- PAINEL DE REATIVAÇÃO -->
@@ -3404,35 +3412,25 @@ function abrirConfiguracoes() {
 })();
 </script>
 
+<div id="ficha-tooltip" onmouseenter="cancelarOcultarFicha()" onmouseleave="agendarOcultarFicha()">
+  <div class="card-header">
+    <span>&#9432; FICHA DO CLIENTE</span>
+    <button onclick="ocultarFichaTooltip()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:16px;line-height:1">&#10005;</button>
+  </div>
+  <div class="card-body" id="ficha-tooltip-content"></div>
+</div>
 
-function togglePedidosPanel(e) {
-  if (e) e.stopPropagation();
-  var p = document.getElementById('pedidos-panel');
-  if (!p) return;
-  var showing = p.style.display !== 'none';
-  if (showing) {
-    p.style.display = 'none';
-  } else {
-    // Posicionar o panel fixo alinhado ao botão
-    var btn = e && e.currentTarget ? e.currentTarget : (e && e.target ? e.target : null);
-    if (btn) {
-      var rect = btn.getBoundingClientRect();
-      var panelW = 380;
-      var left = Math.min(rect.left, window.innerWidth - panelW - 8);
-      p.style.left = Math.max(4, left) + 'px';
-    }
-    p.style.display = 'block';
-  }
-}
-document.addEventListener('click', function(e) {
-  var tp = document.querySelector('.topbar-pedidos');
-  if (tp && !tp.contains(e.target)) {
-    var p = document.getElementById('pedidos-panel');
-    if (p) p.style.display = 'none';
-  }
-});
+<!-- pedidos-panel body level -->
+<div id="pedidos-panel" class="topbar-pedidos-panel" style="display:none">
+  <div style="display:flex;gap:6px;margin-bottom:8px">
+    <input id="busca-pedido" type="text" placeholder="Buscar por nr ou cliente..."
+      style="flex:1" oninput="renderListaPedidos(this.value)">
+    <button class="btn-green btn-sm" onclick="novoPedido()">+ Novo</button>
+  </div>
+  <div id="lista-pedidos" style="max-height:300px;overflow-y:auto"></div>
+</div>
 
-
+<script>
 function abrirFichaModal() {
   var bd = document.getElementById('ficha-backdrop');
   var fc = document.getElementById('card-ficha');
@@ -3446,27 +3444,17 @@ function fecharFichaModal() {
   if (fc) fc.style.display = 'none';
 }
 document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape') fecharFichaModal();
+  if (e.key === 'Escape') { fecharFichaModal(); ocultarFichaTooltip(); }
 });
-
-<div id="ficha-tooltip" onmouseenter="cancelarOcultarFicha()" onmouseleave="agendarOcultarFicha()">
-  <div class="card-header">
-    <span>&#9432; FICHA DO CLIENTE</span>
-    <button onclick="ocultarFichaTooltip()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:16px;line-height:1">&#10005;</button>
-  </div>
-  <div class="card-body" id="ficha-tooltip-content"></div>
-</div>
-
 var _fichaOcultarTimer = null;
 function mostrarFichaTooltip(e) {
   cancelarOcultarFicha();
   var tip = document.getElementById('ficha-tooltip');
   if (!tip) return;
-  // Posicionar acima do elemento trigger
-  var rect = e.target.closest ? e.target.closest('[onmouseenter]').getBoundingClientRect() : e.target.getBoundingClientRect();
+  var triggerEl = e.currentTarget || e.target;
+  var rect = triggerEl.getBoundingClientRect();
   var tipW = Math.min(700, window.innerWidth * 0.92);
   var left = Math.max(8, Math.min(rect.left, window.innerWidth - tipW - 8));
-  // Tentar mostrar acima; se não couber, mostrar abaixo
   var spaceAbove = rect.top - 10;
   var spaceBelow = window.innerHeight - rect.bottom - 10;
   tip.style.width = tipW + 'px';
@@ -3491,6 +3479,6 @@ function ocultarFichaTooltip() {
   var tip = document.getElementById('ficha-tooltip');
   if (tip) tip.style.display = 'none';
 }
-
+</script>
 </body>
 </html>
