@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CRM SA">
 <link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="Logo%20Santo%20Angelo%20-%20Preto%20Sem%20Fundo.png">
+<link rel="apple-touch-icon" href="/Logo%20Santo%20Angelo%20-%20Preto%20Sem%20Fundo.png">
 <title>CRM Vendas — Santo Angelo</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -644,6 +644,57 @@ body{padding-top:104px!important}
 #boas-vindas{margin-left:0!important;margin-top:0!important}
 .container{margin:0 auto!important;max-width:1200px!important}
 /* strip CSS removido */
+
+/* ── TABLET RESPONSIVO ─────────────────────────────────────────── */
+@media screen and (pointer:coarse),(max-width:1280px){
+  /* Base touch */
+  html,body{font-size:15px}
+  input,select,textarea{font-size:15px!important;min-height:44px!important;padding:8px 12px!important;box-sizing:border-box}
+  select{padding-right:28px!important}
+  .btn-green,.btn-cyan,.btn-orange,.btn-red,.btn-purple,.btn-blue,.topbar-btn{
+    min-height:44px!important;padding:8px 18px!important;font-size:14px!important}
+  .btn-sm{min-height:36px!important;padding:6px 14px!important;font-size:13px!important}
+  .section-label{font-size:12px!important;margin-bottom:4px}
+}
+
+/* Tablet geral — container full-width */
+@media screen and (max-width:1280px){
+  .container{max-width:100%!important;padding:8px 10px!important}
+  .card-body{padding:14px!important}
+  /* Desc. Comercial inline */
+  .desc-bar{gap:10px}
+  /* Grid dos selects de config — 1 coluna em portrait, 3 em landscape */
+  #busca-produto{font-size:15px!important}
+}
+
+/* Portrait tablet */
+@media screen and (max-width:900px) and (orientation:portrait){
+  /* Topbar compacta */
+  .topbar{height:70px!important;gap:8px!important;padding:0 10px!important}
+  .topbar-logo img{height:50px!important}
+  .topbar-logo .header-sub{font-size:.5rem!important}
+  .topbar-logo .dot{width:9px!important;height:9px!important}
+  body{padding-top:94px!important}
+  /* Selects em coluna no portrait */
+  .flex[style*="margin-bottom:10px"]{flex-direction:column!important}
+  .flex[style*="margin-bottom:10px"] > div{min-width:unset!important}
+  /* Botões de ação — sticky no rodapé */
+  .flex.mt10[style*="flex-wrap"]{
+    position:sticky!important;bottom:0!important;z-index:100!important;
+    background:var(--card)!important;
+    padding:10px 0 10px 0!important;margin:0!important;
+    border-top:1px solid var(--border)!important;
+  }
+  .flex.mt10[style*="flex-wrap"] button{flex:1!important;min-width:0!important}
+}
+
+/* Landscape tablet — melhor aproveitamento da largura */
+@media screen and (max-width:1280px) and (orientation:landscape){
+  .topbar{height:72px!important;gap:10px!important}
+  .topbar-logo img{height:56px!important}
+  body{padding-top:96px!important}
+}
+/* ─────────────────────────────────────────────────────────────── */
 
 /* ── FICHA CLIENTE: modal flutuante ───────────────────────────── */
 #ficha-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9400;display:none}
@@ -2981,7 +3032,7 @@ document.addEventListener('click', function(e) {
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
   <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span></span>
-  <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
+  <span><a href="/qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
 
