@@ -1003,7 +1003,7 @@ body{padding-top:104px!important}
         <button class="btn-green" onclick="salvarPedido()">&#9632; SALVAR PEDIDO</button>
         <button class="btn-cyan" onclick="previewPDF()">&#9654; GERAR PDF</button>
         <div style="position:relative;display:inline-block">
-          <button class="btn-purple" onclick="toggleExportMenu()" style="letter-spacing:.5px">&#8645; EXPORTAR</button>
+          <button class="btn-purple" onclick="toggleExportMenu(event)" style="letter-spacing:.5px">&#8645; EXPORTAR</button>
           <div id="export-menu" style="display:none;position:absolute;bottom:110%;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;min-width:190px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.4)">
             <div onclick="exportarPDF();toggleExportMenu()" style="padding:10px 16px;cursor:pointer;font-size:12px;letter-spacing:.5px;color:var(--text)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">&#128196; PDF — Pedido de Venda</div>
             <div onclick="exportarExcel();toggleExportMenu()" style="padding:10px 16px;cursor:pointer;font-size:12px;letter-spacing:.5px;color:var(--text)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">&#128202; EXCEL — Planilha de Itens</div>
@@ -2215,15 +2215,14 @@ function salvarPedidoSilencioso() {
   atualizarBadgePedidos();
 }
 
-function toggleExportMenu() {
+function toggleExportMenu(ev) {
+  if (ev) ev.stopPropagation();
   var m = document.getElementById('export-menu');
   if (m) m.style.display = (m.style.display === 'none' ? 'block' : 'none');
 }
-document.addEventListener('click', function(e) {
-  if (!e.target.closest || !e.target.closest('#export-menu') && !e.target.closest('[onclick*="toggleExportMenu"]')) {
-    var m = document.getElementById('export-menu');
-    if (m) m.style.display = 'none';
-  }
+document.addEventListener('click', function() {
+  var m = document.getElementById('export-menu');
+  if (m) m.style.display = 'none';
 });
 function _nomeArquivo(ext) {
   var fantasia = clienteAtual ? (clienteAtual.fantasia || clienteAtual.nome || 'cliente') : 'cliente';
