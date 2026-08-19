@@ -96,8 +96,8 @@ body{background-image:
 #boas-vindas{position:fixed;top:0;left:0;right:0;height:22px;background:linear-gradient(90deg,#4a2fa0,#2c2060,#4a2fa0);color:#fff;display:flex;align-items:center;justify-content:center;z-index:500;border-bottom:1px solid rgba(108,75,244,.4);text-align:center;font-size:11px;font-weight:300;letter-spacing:1.5px;text-transform:uppercase}
 .container{
   display:block;
-  padding:12px 16px;
-  max-width:1180px;
+  padding:10px 6px;
+  max-width:100%;
   margin:0 auto;
 }
 
@@ -999,10 +999,16 @@ body{padding-top:104px!important}
       </div>
 
       <!-- BOTOES ACAO -->
-      <div class="flex mt10" style="flex-wrap:wrap;gap:8px">
-        <button class="btn-green" onclick="salvarPedido()">&#9632; Salvar Pedido</button>
-        <button class="btn-cyan" onclick="previewPDF()">&#9654; Gerar PDF</button>
-        <button class="btn-orange" onclick="novoPedido()">&#10010; Novo Pedido</button>
+      <div class="flex mt10" style="flex-wrap:wrap;gap:8px;align-items:center">
+        <button class="btn-green" onclick="salvarPedido()">&#9632; SALVAR PEDIDO</button>
+        <button class="btn-cyan" onclick="previewPDF()">&#9654; GERAR PDF</button>
+        <div style="position:relative;display:inline-block">
+          <button class="btn-purple" onclick="toggleExportMenu()" style="letter-spacing:.5px">&#8645; EXPORTAR</button>
+          <div id="export-menu" style="display:none;position:absolute;bottom:110%;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;min-width:190px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.4)">
+            <div onclick="exportarPDF();toggleExportMenu()" style="padding:10px 16px;cursor:pointer;font-size:12px;letter-spacing:.5px;color:var(--text)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">&#128196; PDF — Pedido de Venda</div>
+            <div onclick="exportarExcel();toggleExportMenu()" style="padding:10px 16px;cursor:pointer;font-size:12px;letter-spacing:.5px;color:var(--text)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">&#128202; EXCEL — Planilha de Itens</div>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -2207,6 +2213,32 @@ function salvarPedidoSilencioso() {
   if (stEl) { stEl.textContent = '● SALVO (auto)'; stEl.style.color = 'var(--green)'; }
   renderListaPedidos(document.getElementById('busca-pedido').value);
   atualizarBadgePedidos();
+}
+
+function toggleExportMenu() {
+  var m = document.getElementById('export-menu');
+  if (m) m.style.display = (m.style.display === 'none' ? 'block' : 'none');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest || !e.target.closest('#export-menu') && !e.target.closest('[onclick*="toggleExportMenu"]')) {
+    var m = document.getElementById('export-menu');
+    if (m) m.style.display = 'none';
+  }
+});
+function _nomeArquivo(ext) {
+  var fantasia = clienteAtual ? (clienteAtual.fantasia || clienteAtual.nome || 'cliente') : 'cliente';
+  var nr = numPedidoAtual || 'orcamento';
+  return (fantasia + ' - ' + nr).replace(/[/\\:*?"<>|]/g, '_') + '.' + ext;
+}
+function exportarPDF() {
+  if (!clienteAtual) { alert('Selecione um cliente antes de exportar.'); return; }
+  if (!itensPedido.length) { alert('Adicione pelo menos um produto ao pedido.'); return; }
+  salvarPedidoSilencioso();
+  document.getElementById('pdfModalContent').innerHTML = gerarHTMLPedido();
+  document.getElementById('pdfModal').style.display = 'block';
+}
+function exportarExcel() {
+  exportarPedidoExcel();
 }
 
 function previewPDF() {
