@@ -247,7 +247,7 @@ button:active::after{width:200px;height:200px;opacity:0;transition:0s}
 /* PEDIDO ITENS */
 .pedido-header{
   display:grid;
-  grid-template-columns:2.6fr 55px 105px 75px 90px 105px 30px 30px;
+  grid-template-columns:26px 2.4fr 55px 105px 75px 90px 105px 30px 30px;
   gap:4px;padding:6px 10px;
   background:rgba(108,75,244,.07);
   border:1px solid rgba(108,75,244,.25);
@@ -258,7 +258,7 @@ button:active::after{width:200px;height:200px;opacity:0;transition:0s}
 }
 .pedido-item{
   display:grid;
-  grid-template-columns:2.6fr 55px 105px 75px 90px 105px 30px 30px;
+  grid-template-columns:26px 2.4fr 55px 105px 75px 90px 105px 30px 30px;
   gap:4px;padding:6px 10px;
   border:1px solid var(--border);
   border-radius:5px;margin-bottom:3px;
@@ -642,7 +642,7 @@ body { padding-bottom: 26px; }
 /* Layout full-width com topbar */
 body{padding-top:104px!important}
 #boas-vindas{margin-left:0!important;margin-top:0!important}
-.container{margin:0 auto!important;max-width:1200px!important}
+.container{margin:0 auto!important;max-width:100%!important;padding:10px 6px!important}
 /* strip CSS removido */
 
 /* ── TABLET RESPONSIVO ─────────────────────────────────────────── */
@@ -948,29 +948,36 @@ body{padding-top:104px!important}
       <div class="frete-box" id="frete-info" style="display:none"></div>
 
       <!-- DESCONTO COMERCIAL -->
-      <div class="desc-bar mt6">
-        <span style="font-weight:700;font-size:11.5px;color:var(--purple);letter-spacing:.5px;text-transform:uppercase">Desc. Comercial</span>
-        <input type="number" id="desc-comercial" min="0" max="100" step="0.01" value=""
-          style="width:75px" placeholder="%" oninput="atualizarTotais()">
-        <span style="font-size:11px;color:var(--text2)">% sobre todos os itens</span>
-        <span style="font-size:11.5px;font-weight:700;color:var(--cyan)" id="lbl-desc-total"></span>
-        <span style="margin-left:auto;font-size:11.5px" id="lbl-desc-cond"></span>
+      <div class="mt6" style="background:rgba(108,75,244,.07);border:1px solid rgba(108,75,244,.25);border-radius:6px;padding:7px 10px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:11.5px;color:var(--purple);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap">Desc. Comercial</span>
+          <input type="number" id="desc-com-1" min="0" max="100" step="0.01" value="" style="width:62px" placeholder="D1 %" oninput="onDescComChange()">
+          <input type="number" id="desc-com-2" min="0" max="100" step="0.01" value="" style="width:62px" placeholder="D2 %" oninput="onDescComChange()">
+          <input type="number" id="desc-com-3" min="0" max="100" step="0.01" value="" style="width:62px" placeholder="D3 %" oninput="onDescComChange()">
+          <input type="number" id="desc-com-4" min="0" max="100" step="0.01" value="" style="width:62px" placeholder="D4 %" oninput="onDescComChange()">
+          <span style="font-size:11px;color:var(--text2)">= Total:</span>
+          <span id="lbl-desc-com-total" style="font-size:13px;font-weight:700;color:var(--cyan)">0%</span>
+          <span style="font-size:11.5px;font-weight:700;color:var(--cyan);margin-left:4px" id="lbl-desc-total"></span>
+          <span style="margin-left:auto;font-size:11.5px" id="lbl-desc-cond"></span>
+        </div>
       </div>
 
       <!-- BUSCA PRODUTO -->
       <div class="autocomplete-wrap mt6">
         <input id="busca-produto" type="text" placeholder="&#128269; Buscar produto por codigo ou descricao..."
           oninput="buscaProdutoAuto(this.value)" autocomplete="off"
-          style="border:2px solid var(--cyan,#6c4bf4);box-shadow:0 0 0 2px rgba(108,75,244,.12)">
+          style="border:2px solid var(--cyan,#6c4bf4);box-shadow:0 0 0 2px rgba(108,75,244,.12)"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();if(_prodSelecionados.length>0){adicionarSelecionados();}else{var _first=document.querySelector('#autocomplete-prod-list .prod-check-item');if(_first)_first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));}}">
         <div id="autocomplete-prod-list" class="autocomplete-list" style="display:none"></div>
       </div>
 
       <!-- TABELA ITENS -->
       <div style="margin-top:10px">
         <div class="pedido-header">
+          <span style="text-align:center">#</span>
           <span>Produto</span>
           <span style="text-align:center">Emb</span>
-          <span style="text-align:center">Preco (c/ ICMS)</span>
+          <span style="text-align:center">Preco Unit</span>
           <span style="text-align:center">Qtd</span>
           <span style="text-align:center">Desc %</span>
           <span style="text-align:center">Total</span>
@@ -1005,8 +1012,9 @@ body{padding-top:104px!important}
         <div style="position:relative;display:inline-block">
           <button class="btn-purple" onclick="toggleExportMenu(event)" style="letter-spacing:.5px">&#8645; EXPORTAR</button>
           <div id="export-menu" style="display:none;position:absolute;bottom:110%;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;min-width:190px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.4)">
-            <div onclick="exportarPDF();toggleExportMenu()" style="padding:10px 16px;cursor:pointer;font-size:12px;letter-spacing:.5px;color:var(--text)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">&#128196; PDF — Pedido de Venda</div>
-            <div onclick="exportarExcel();toggleExportMenu()" style="padding:10px 16px;cursor:pointer;font-size:12px;letter-spacing:.5px;color:var(--text)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">&#128202; EXCEL — Planilha de Itens</div>
+            <div onclick="exportarAmbos();toggleExportMenu(event)" style="padding:10px 16px;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.5px;color:#00e676;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">&#9889; PDF + EXCEL — Baixar Ambos</div>
+            <div onclick="exportarPDF();toggleExportMenu(event)" style="padding:10px 16px;cursor:pointer;font-size:12px;letter-spacing:.5px;color:var(--text)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">&#128196; PDF — Pedido de Venda</div>
+            <div onclick="exportarExcel();toggleExportMenu(event)" style="padding:10px 16px;cursor:pointer;font-size:12px;letter-spacing:.5px;color:var(--text)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">&#128202; EXCEL — Planilha de Itens</div>
           </div>
         </div>
       </div>
@@ -1578,7 +1586,17 @@ function adicionarItem(prod) {
   setTimeout(function() {
     var idx = itensPedido.length - 1;
     var qtdEl = document.getElementById('qty_' + idx);
-    if (qtdEl) qtdEl.focus();
+    if (qtdEl) {
+      qtdEl.focus();
+      qtdEl.addEventListener('keydown', function _enterQty(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          qtdEl.removeEventListener('keydown', _enterQty);
+          var bp = document.getElementById('busca-produto');
+          if (bp) { bp.focus(); bp.select(); }
+        }
+      });
+    }
   }, 50);
 }
 
@@ -1603,6 +1621,7 @@ function renderItensPedido() {
     var qtdVal = (item.qtd !== '') ? item.qtd : '';
     var diVal = item.descItem || 0;
     rows += '<div class="pedido-item">';
+    rows += '<span style="text-align:center;font-size:10px;color:var(--text2);font-weight:700">' + (i+1) + '</span>';
     rows += '<span style="font-size:12px"><span style="color:var(--cyan);font-weight:700">' + (p.codigo||'') + '</span> ' + (p.descricao||'') + '</span>';
     rows += '<span style="text-align:center;font-size:11.5px;color:var(--text2)">' + (p.embalagem||1) + '</span>';
     rows += '<span style="text-align:center;font-size:12.5px;font-weight:700;color:var(--green)">' + fmt(preco);
@@ -1717,7 +1736,7 @@ function calcTotalItemNum(idx) {
   var qtd = parseInt(item.qtd)||1;
   var preco = precoBaseCalc(item.prod);
   var di = (item.descItem||0) / 100;
-  var descCom = parseFloat(document.getElementById('desc-comercial').value||0) / 100;
+  var descCom = getDescComercial() / 100;
   var cond = getCondicao();
   var descCond = cond ? (cond.desconto||0) : 0;
   return preco * qtd * (1 - descCond) * (1 - descCom) * (1 - di);
@@ -1728,7 +1747,7 @@ function calcTotalItem(idx) {
 }
 
 function calcTotalLiquido() {
-  var descCom = parseFloat(document.getElementById('desc-comercial').value||0) / 100;
+  var descCom = getDescComercial() / 100;
   var cond = getCondicao();
   var descCond = cond ? (cond.desconto||0) : 0;
   var total = 0;
@@ -1809,7 +1828,7 @@ function atualizarTotais() {
   var div = document.getElementById('totais-box');
   if (!itensPedido.length) { div.style.display = 'none'; return; }
   div.style.display = 'block';
-  var descCom = parseFloat(document.getElementById('desc-comercial').value||0) / 100;
+  var descCom = getDescComercial() / 100;
   var cond = getCondicao();
   var descCond = cond ? (cond.desconto||0) : 0;
   var bruto = 0;
@@ -2036,7 +2055,7 @@ function salvarPedido() {
       var t = document.getElementById('fob-transportadora') || document.getElementById('redespacho-transportadora');
       return t ? t.value : '';
     })(),
-    descComercial: parseFloat(document.getElementById('desc-comercial').value||0),
+    descComercial: getDescComercial(),
     obs: document.getElementById('obs-pedido').value,
     total: calcTotalLiquido()
   };
@@ -2066,7 +2085,7 @@ function carregarPedido(numero) {
   document.getElementById('sel-condicao').value = ped.condicao || '';
   document.getElementById('sel-tabela').value   = ped.tabela  || 'matriz';
   document.getElementById('sel-frete').value    = ped.frete   || 'cif';
-  document.getElementById('desc-comercial').value = ped.descComercial || '';
+  setDescComercial(ped.descComercial || 0);
   atualizarFrete();
   setTimeout(function(){
     var tEl = document.getElementById('fob-transportadora') || document.getElementById('redespacho-transportadora');
@@ -2094,7 +2113,7 @@ function novoPedido() {
   document.getElementById('sel-condicao').value = '';
   document.getElementById('sel-tabela').value   = 'matriz';
   document.getElementById('sel-frete').value    = 'cif';
-  document.getElementById('desc-comercial').value = '';
+  clearDescComercial();
   document.getElementById('obs-pedido').value   = '';
   document.getElementById('num-pedido-display').textContent = '';
   document.getElementById('pedido-status-display').textContent = '';
@@ -2201,7 +2220,7 @@ function salvarPedidoSilencioso() {
       var t = document.getElementById('fob-transportadora') || document.getElementById('redespacho-transportadora');
       return t ? t.value : '';
     })(),
-    descComercial: parseFloat(document.getElementById('desc-comercial').value||0),
+    descComercial: getDescComercial(),
     obs: document.getElementById('obs-pedido').value,
     total: calcTotalLiquido()
   };
@@ -2213,6 +2232,34 @@ function salvarPedidoSilencioso() {
   if (stEl) { stEl.textContent = '● SALVO (auto)'; stEl.style.color = 'var(--green)'; }
   renderListaPedidos(document.getElementById('busca-pedido').value);
   atualizarBadgePedidos();
+}
+
+/* ── Desconto comercial (4 campos) ── */
+function getDescComercial() {
+  var d1 = parseFloat(document.getElementById('desc-com-1').value||0)||0;
+  var d2 = parseFloat(document.getElementById('desc-com-2').value||0)||0;
+  var d3 = parseFloat(document.getElementById('desc-com-3').value||0)||0;
+  var d4 = parseFloat(document.getElementById('desc-com-4').value||0)||0;
+  return d1 + d2 + d3 + d4;
+}
+function setDescComercial(val) {
+  document.getElementById('desc-com-1').value = val > 0 ? val : '';
+  document.getElementById('desc-com-2').value = '';
+  document.getElementById('desc-com-3').value = '';
+  document.getElementById('desc-com-4').value = '';
+  onDescComChange();
+}
+function clearDescComercial() {
+  ['desc-com-1','desc-com-2','desc-com-3','desc-com-4'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  onDescComChange();
+}
+function onDescComChange() {
+  var tot = getDescComercial();
+  var el = document.getElementById('lbl-desc-com-total');
+  if (el) el.textContent = tot.toFixed(2).replace(/\.?0+$/,'') + '%';
+  atualizarTotais();
 }
 
 function toggleExportMenu(ev) {
@@ -2229,16 +2276,37 @@ function _nomeArquivo(ext) {
   var nr = numPedidoAtual || 'orcamento';
   return (fantasia + ' - ' + nr).replace(/[/\\:*?"<>|]/g, '_') + '.' + ext;
 }
+function _nomePedido() {
+  var fant = clienteAtual ? (clienteAtual.fantasia||clienteAtual.nome||'cliente') : 'cliente';
+  return (fant + ' - ' + (numPedidoAtual||'orcamento')).replace(/[/\\:*?"<>|]/g,'_');
+}
 function exportarPDF() {
   if (!clienteAtual) { alert('Selecione um cliente antes de exportar.'); return; }
   if (!itensPedido.length) { alert('Adicione pelo menos um produto ao pedido.'); return; }
   salvarPedidoSilencioso();
-  document.getElementById('pdfModalContent').innerHTML = gerarHTMLPedido();
-  document.getElementById('pdfModal').style.display = 'block';
+  var nomeArq = _nomePedido() + '.pdf';
+  var temp = document.createElement('div');
+  temp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:794px;background:#fff;padding:20px;font-size:11px;font-family:Arial,sans-serif';
+  temp.innerHTML = gerarHTMLPedido();
+  document.body.appendChild(temp);
+  html2canvas(temp,{scale:2,useCORS:true,backgroundColor:'#ffffff'}).then(function(canvas){
+    document.body.removeChild(temp);
+    var _jspdf = window.jspdf||window.jsPDF;
+    var jsPDF = _jspdf ? (_jspdf.jsPDF||_jspdf) : null;
+    if (!jsPDF) { alert('jsPDF não disponível. Use o botão GERAR PDF.'); return; }
+    var pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var margin=8,pageH=297,imgWidth=210-margin*2;
+    var imgHeight=canvas.height*imgWidth/canvas.width;
+    var heightLeft=imgHeight,position=margin;
+    var imgData=canvas.toDataURL('image/jpeg',0.92);
+    pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);
+    heightLeft-=(pageH-margin*2);
+    while(heightLeft>0){position=margin-(imgHeight-heightLeft);pdf.addPage();pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);heightLeft-=(pageH-margin*2);}
+    pdf.save(nomeArq);
+  });
 }
-function exportarExcel() {
-  exportarPedidoExcel();
-}
+function exportarExcel() { exportarPedidoExcel(); }
+function exportarAmbos() { exportarExcel(); setTimeout(exportarPDF, 600); }
 
 function previewPDF() {
   if (!clienteAtual) { alert('Selecione um cliente antes de gerar o PDF.'); return; }
@@ -2264,7 +2332,7 @@ function exportarPedidoExcel() {
   var c = clienteAtual;
   var cond = getCondicao();
   var descCond = cond ? (cond.desconto||0) : 0;
-  var descCom = parseFloat(document.getElementById('desc-comercial').value||0) / 100;
+  var descCom = getDescComercial() / 100;
   var tipo = document.getElementById('sel-frete').value;
   var freteLabel = (tipo === 'cif') ? 'CIF' : (tipo === 'cif-redespacho' ? 'CIF - Redespacho' : 'FOB');
   var numero = numPedidoAtual || '(nao salvo)';
@@ -2332,7 +2400,8 @@ function exportarPedidoExcel() {
 
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Pedido');
-  var nomeArq = 'Pedido_' + (numPedidoAtual || 'novo') + '.xlsx';
+  var _fant = clienteAtual ? (clienteAtual.fantasia||clienteAtual.nome||'cliente') : 'cliente';
+  var nomeArq = (_fant + ' - ' + (numPedidoAtual||'orcamento')).replace(/[/\\:*?"<>|]/g,'_') + '.xlsx';
   XLSX.writeFile(wb, nomeArq);
 }
 
@@ -2340,7 +2409,7 @@ function gerarHTMLPedido() {
   var c = clienteAtual;
   var cond = getCondicao();
   var descCond = cond ? (cond.desconto||0) : 0;
-  var descCom = parseFloat(document.getElementById('desc-comercial').value||0) / 100;
+  var descCom = getDescComercial() / 100;
   var tipo = document.getElementById('sel-frete').value;
   var tab  = document.getElementById('sel-tabela').value;
   var numero = numPedidoAtual || '(nao salvo)';
