@@ -944,10 +944,7 @@ body{padding-top:104px!important}
         </div>
       </div>
 
-      <!-- INFO FRETE -->
-      <div class="frete-box" id="frete-info" style="display:none"></div>
-
-      <!-- DESCONTO COMERCIAL -->
+      <!-- DESCONTO COMERCIAL + FRETE -->
       <div class="mt6" style="background:rgba(108,75,244,.07);border:1px solid rgba(108,75,244,.25);border-radius:6px;padding:7px 10px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-weight:700;font-size:11.5px;color:var(--purple);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap">Desc. Comercial</span>
@@ -958,11 +955,19 @@ body{padding-top:104px!important}
           <span style="font-size:11px;color:var(--text2)">= Total:</span>
           <span id="lbl-desc-com-total" style="font-size:13px;font-weight:700;color:var(--cyan)">0%</span>
           <span style="font-size:11.5px;font-weight:700;color:var(--cyan);margin-left:4px" id="lbl-desc-total"></span>
-          <span style="margin-left:auto;font-size:11.5px" id="lbl-desc-cond"></span>
+          <span style="font-size:11.5px" id="lbl-desc-cond"></span>
+          <span style="color:var(--border);margin:0 2px;flex-shrink:0">|</span>
+          <div id="frete-info" style="display:none;align-items:center;gap:6px;font-size:11.5px;flex-wrap:wrap"></div>
         </div>
       </div>
 
-      <!-- BUSCA PRODUTO -->
+      <!-- IMPORTAR PDF -->
+      <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
+        <button class="btn-purple btn-sm" onclick="importarPedidoPDF()" title="Importar PDF do representante" style="white-space:nowrap;font-size:11px;padding:5px 10px">&#128229; IMPORTAR PDF</button>
+        <input type="file" id="pdf-import-input" accept=".pdf" style="display:none" onchange="onPDFImportFile(this)">
+        <span style="font-size:10px;color:var(--text2)">Pedido do representante</span>
+      </div>
+            <!-- BUSCA PRODUTO -->
       <div class="autocomplete-wrap mt6">
         <input id="busca-produto" type="text" placeholder="&#128269; Buscar produto por codigo ou descricao..."
           oninput="buscaProdutoAuto(this.value)" autocomplete="off"
@@ -1582,6 +1587,7 @@ function adicionarItem(prod) {
   }
   itensPedido.push({ prod: prod, qtd: '', descItem: 0 });
   renderItensPedido();
+  setTimeout(function(){ var d=document.getElementById('itens-pedido');if(d)d.scrollTop=d.scrollHeight; },20);
   atualizarTotais();
   setTimeout(function() {
     var idx = itensPedido.length - 1;
@@ -1774,21 +1780,17 @@ function atualizarFrete() {
   var estado = clienteAtual ? clienteAtual.estado : null;
   var html = '';
   if (tipo === 'fob') {
-    html = '<div class="flex" style="flex-wrap:wrap;gap:8px">';
     html += '<span class="tag-fob">FOB</span>';
-    html += '<input type="text" id="fob-valor" placeholder="Valor do frete (R$)..." style="width:150px">';
-    html += '<span style="color:var(--text2);font-size:11.5px">Transportadora:</span>';
-    html += '<input type="text" id="fob-transportadora" placeholder="Nome da transportadora..." style="width:220px">';
-    html += '</div>';
-    box.style.display = 'block'; box.innerHTML = html;
+    html += '<input type="text" id="fob-valor" placeholder="Valor do frete (R$)..." style="width:130px">';
+    html += '<span style="color:var(--text2);font-size:11px">Transport.:</span>';
+    html += '<input type="text" id="fob-transportadora" placeholder="Transportadora..." style="width:180px">';
+    box.style.display = 'flex'; box.innerHTML = html;
     document.getElementById('resumo-frete').textContent = '';
   } else if (tipo === 'redespacho') {
-    html = '<div class="flex" style="flex-wrap:wrap;gap:8px">';
     html += '<span class="tag-cif" style="background:rgba(224,120,0,.08);color:var(--orange);border-color:var(--orange)">CIF-REDESPACHO</span>';
-    html += '<span style="color:var(--text2);font-size:11.5px">Transportadora do redespacho:</span>';
-    html += '<input type="text" id="redespacho-transportadora" placeholder="Nome da transportadora no redespacho..." style="width:260px">';
-    html += '</div>';
-    box.style.display = 'block'; box.innerHTML = html;
+    html += '<span style="color:var(--text2);font-size:11px">Transport.:</span>';
+    html += '<input type="text" id="redespacho-transportadora" placeholder="Transportadora do redespacho..." style="width:220px">';
+    box.style.display = 'flex'; box.innerHTML = html;
     if (estado && DB.frete[estado]) {
       var fr2 = DB.frete[estado];
       var minVal2 = tab === 'filial' ? fr2.min_f : fr2.min_m;
@@ -1799,10 +1801,10 @@ function atualizarFrete() {
     var minVal = tab === 'filial' ? fr.min_f : fr.min_m;
     var prazo  = tab === 'filial' ? fr.prazo_f : fr.prazo_m;
     if (minVal) {
-      html = '<div class="flex"><span class="tag-cif">CIF</span>';
-      html += '<span>Minimo: <strong style="color:var(--green)">' + fmt(minVal) + '</strong></span>';
-      html += '<span style="color:var(--text2)">| Prazo: ' + prazo + '</span></div>';
-      box.style.display = 'block'; box.innerHTML = html;
+      html += '<span class="tag-cif">CIF</span>';
+      html += '<span>Min: <strong style="color:var(--green)">' + fmt(minVal) + '</strong></span>';
+      html += '<span style="color:var(--text2)">Prazo: ' + prazo + '</span>';
+      box.style.display = 'flex'; box.innerHTML = html;
       atualizarResumoCIF(minVal);
     } else { box.style.display = 'none'; }
   } else {
@@ -2240,7 +2242,8 @@ function getDescComercial() {
   var d2 = parseFloat(document.getElementById('desc-com-2').value||0)||0;
   var d3 = parseFloat(document.getElementById('desc-com-3').value||0)||0;
   var d4 = parseFloat(document.getElementById('desc-com-4').value||0)||0;
-  return d1 + d2 + d3 + d4;
+  // Desconto em cascata: 1-(1-d1/100)*(1-d2/100)*(1-d3/100)*(1-d4/100)
+  return (1 - (1-d1/100)*(1-d2/100)*(1-d3/100)*(1-d4/100)) * 100;
 }
 function setDescComercial(val) {
   document.getElementById('desc-com-1').value = val > 0 ? val : '';
@@ -2277,8 +2280,10 @@ function _nomeArquivo(ext) {
   return (fantasia + ' - ' + nr).replace(/[/\\:*?"<>|]/g, '_') + '.' + ext;
 }
 function _nomePedido() {
-  var fant = clienteAtual ? (clienteAtual.fantasia||clienteAtual.nome||'cliente') : 'cliente';
-  return (fant + ' - ' + (numPedidoAtual||'orcamento')).replace(/[/\\:*?"<>|]/g,'_');
+  var fant = clienteAtual ? (clienteAtual.fantasia||clienteAtual.nome||'CLIENTE').toUpperCase() : 'CLIENTE';
+  var nr = numPedidoAtual || '';
+  var tipo = nr ? 'PED' : 'ORC';
+  return (fant + ' ' + tipo + (nr ? ' ' + nr : '')).replace(/[/\\:*?"<>|]/g,'_');
 }
 function exportarPDF() {
   if (!clienteAtual) { alert('Selecione um cliente antes de exportar.'); return; }
@@ -2306,7 +2311,7 @@ function exportarPDF() {
   });
 }
 function exportarExcel() { exportarPedidoExcel(); }
-function exportarAmbos() { exportarExcel(); setTimeout(exportarPDF, 600); }
+function exportarAmbos() { exportarPDF(); exportarExcel(); }
 
 function previewPDF() {
   if (!clienteAtual) { alert('Selecione um cliente antes de gerar o PDF.'); return; }
@@ -2400,8 +2405,7 @@ function exportarPedidoExcel() {
 
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Pedido');
-  var _fant = clienteAtual ? (clienteAtual.fantasia||clienteAtual.nome||'cliente') : 'cliente';
-  var nomeArq = (_fant + ' - ' + (numPedidoAtual||'orcamento')).replace(/[/\\:*?"<>|]/g,'_') + '.xlsx';
+  var nomeArq = _nomePedido() + '.xlsx';
   XLSX.writeFile(wb, nomeArq);
 }
 
@@ -3839,6 +3843,301 @@ function ocultarFichaTooltip() {
   var tip = document.getElementById('ficha-tooltip');
   if (tip) tip.style.display = 'none';
 }
+/* ═══════════════════════════════════════════════════════
+   IMPORTAR PDF DO REPRESENTANTE
+   ═══════════════════════════════════════════════════════ */
+function importarPedidoPDF() {
+  // Load PDF.js on demand
+  if (!window.pdfjsLib) {
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = function() {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      document.getElementById('pdf-import-input').click();
+    };
+    document.head.appendChild(s);
+  } else {
+    document.getElementById('pdf-import-input').click();
+  }
+}
+
+function onPDFImportFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  var fr = new FileReader();
+  fr.onload = function(e) { _processPDFImport(e.target.result); };
+  fr.readAsArrayBuffer(file);
+}
+
+async function _processPDFImport(buf) {
+  var modal = document.getElementById('pdf-import-modal');
+  var content = document.getElementById('pdf-import-content');
+  modal.style.display = 'flex';
+  content.innerHTML = '<div style="text-align:center;padding:40px;font-size:14px">&#9203; Lendo PDF...</div>';
+  try {
+    var pdf = await pdfjsLib.getDocument({data: buf}).promise;
+    var allText = '';
+    for (var p = 1; p <= pdf.numPages; p++) {
+      var page = await pdf.getPage(p);
+      var tc = await page.getTextContent();
+      var lineMap = {};
+      tc.items.forEach(function(it) {
+        var y = Math.round(it.transform[5] / 2) * 2; // 2px tolerance bucket
+        if (!lineMap[y]) lineMap[y] = [];
+        lineMap[y].push({x: it.transform[4], str: it.str});
+      });
+      Object.keys(lineMap).map(Number).sort(function(a,b){ return b-a; }).forEach(function(y) {
+        var line = lineMap[y].sort(function(a,b){ return a.x-b.x; }).map(function(it){ return it.str; }).join(' ').trim();
+        if (line) allText += line + '\n';
+      });
+    }
+    var parsed = _parsePedidoText(allText);
+    _renderImportModal(parsed);
+  } catch(err) {
+    content.innerHTML = '<div style="color:var(--red);padding:20px">Erro ao ler PDF: ' + err.message + '</div>';
+  }
+}
+
+function _parsePedidoText(text) {
+  var r = { pedidoNr:'', fantasia:'', cnpj:'', tabela:'matriz', condicao:'', frete:'cif', obs:'', rawText: text, prods:[] };
+  var m;
+  m = text.match(/Pedido\s+N[°º\.o]\s*(\d+)/i); if (m) r.pedidoNr = m[1];
+  m = text.match(/Nome\s+Fantasia[:\s]+(.+?)(?=CNPJ|Inscrição|\n)/i); if (m) r.fantasia = m[1].trim();
+  m = text.match(/CNPJ[:\s]+([\d.\/-]+)/i); if (m) r.cnpj = m[1].trim();
+  m = text.match(/Representada[:\s]+(.+)/i);
+  if (m) {
+    var rep = m[1].trim();
+    r.tabela = /filial|\bES\b/i.test(rep) ? 'filial' : 'matriz';
+    r.obs += 'Representada: ' + rep + '\n';
+  }
+  m = text.match(/Condi[çc][aã]o\s+de\s+Pagamento[:\s]+(.+?)(?=Data|Ordem|\n)/i); if (m) r.condicao = m[1].trim();
+  m = text.match(/Transportadora[:\s\n]+(CIF|FOB)/i); if (m) r.frete = m[1].toLowerCase();
+  m = text.match(/Informa[çc][õo]es\s+Adicionais[:\s\n]+(.+?)(?=\n\n|Preço\s+Preço|#\s+Código)/is);
+  if (m) r.obs += m[1].trim();
+  m = text.match(/Ordem\s+de\s+Compra[:\s]+(.+?)(?=Vendedor|\n)/i);
+  if (m) r.obs = r.obs.trim() + '\nOC: ' + m[1].trim();
+
+  // Parse products
+  var lines = text.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var nr=null, repCod=null, qtd=null, prices=[], internalCode=null;
+    var pm1, pm2;
+
+    // Pattern 1: "nr CODE qty UNIT" — code starts uppercase (no /i flag to avoid matching description words)
+    pm1 = line.match(/^\s*(\d{1,3})\s+([A-Z][A-Z0-9\/\-]+(?:\s+[A-Z][A-Z0-9\/\-]+){0,2})\s+([\d.]+)\s+(MTS?|PC|UN|CX|MT)\b/);
+    if (pm1) {
+      nr = parseInt(pm1[1]);
+      if (nr >= 1 && nr <= 200) {
+        repCod = pm1[2].trim().replace(/\s+[a-z].*/, '').trim(); // strip trailing lowercase description words
+        if (/(código|produto|qtde|preço|tabela|dados|vendedor|ordem)/i.test(repCod)) nr = null;
+        else qtd = parseInt(pm1[3].replace(/\./g,'')) || 1;
+      } else nr = null;
+    }
+
+    // Pattern 2: "nr qty UNIT" (code on previous line, e.g. "5 500 PC")
+    if (nr === null) {
+      pm2 = line.match(/^\s*(\d{1,3})\s+([\d.]+)\s+(MTS?|PC|UN|CX)\b/);
+      if (pm2) {
+        nr = parseInt(pm2[1]);
+        if (nr >= 1 && nr <= 200) {
+          qtd = parseInt(pm2[2].replace(/\./g,'')) || 1;
+          var prevCtx = lines.slice(Math.max(0,i-4), i).join(' ');
+          var cm1 = prevCtx.match(/\b(\d{5,})\b/);
+          var cm2 = prevCtx.match(/\b([A-Z][A-Z0-9\/\-]{2,15})\b/);
+          repCod = (cm1 ? cm1[1] : '') + (cm2 ? (cm1?' ':'')+cm2[1] : '');
+          repCod = repCod.trim() || '?';
+        } else nr = null;
+      }
+    }
+
+    if (nr && qtd && repCod) {
+      var ctx = lines.slice(Math.max(0,i-2), i+5).join(' ');
+      var priceRe = /R\$\s*([\d.,]+)/g, pm3;
+      while ((pm3 = priceRe.exec(ctx)) !== null) {
+        var v = parseFloat(pm3[1].replace(/\./g,'').replace(',','.')); if (v>0) prices.push(v);
+      }
+      var nextCtx = lines.slice(Math.max(0,i-4), i+15).join(' '); // wide window for internal codes
+      var codM = nextCtx.match(/(\d\.\d\.\d\d\.\d\d\d\.\d\d\d)/);
+      internalCode = codM ? codM[1] : null;
+      r.prods.push({nr:nr, repCod:repCod, internalCode:internalCode, qtd:qtd,
+        precoTabela:prices[0]||0, precoLiquido:prices[1]||prices[0]||0});
+    }
+  }
+  var seen = {};
+  r.prods = r.prods.filter(function(p){ if(seen[p.nr]) return false; seen[p.nr]=true; return true; });
+  r.prods.sort(function(a,b){ return a.nr-b.nr; });
+  return r;
+}
+
+function _matchProdutosImport(prods, tabela) {
+  var pool = (tabela === 'filial') ? (DB.produtos_filial||[]) : (DB.produtos_matriz||[]);
+  if (!pool.length) pool = DB.produtos||[];
+  return prods.map(function(pp) {
+    var found = null;
+    if (pp.internalCode) {
+      found = pool.find(function(p){ return p.codigo===pp.internalCode; });
+      if (!found) found = (DB.produtos||[]).find(function(p){ return p.codigo===pp.internalCode; });
+    }
+    if (!found) {
+      var rc = pp.repCod.toLowerCase().replace(/[\s\-\/]/g,'');
+      found = pool.find(function(p) {
+        var pc = (p.codigo||'').toLowerCase().replace(/[\s\-\/\.]/g,'');
+        var pd = (p.descricao||'').toLowerCase();
+        return pc.includes(rc)||rc.includes(pc)||pd.includes(rc);
+      });
+    }
+    return Object.assign({}, pp, {matched: found||null});
+  });
+}
+
+function _renderImportModal(parsed) {
+  window._importParsed = parsed;
+  var withMatch = _matchProdutosImport(parsed.prods, parsed.tabela);
+  window._importProds = withMatch;
+  var html = '<div style="padding:14px 16px;border-bottom:1px solid var(--border)">';
+  html += '<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px">';
+  html += '<span><b style="color:var(--cyan)">Pedido rep:</b> #'+(parsed.pedidoNr||'?')+'</span>';
+  html += '<span><b style="color:var(--cyan)">Fantasia:</b> '+(parsed.fantasia||'—')+'</span>';
+  html += '<span><b style="color:var(--cyan)">CNPJ:</b> '+(parsed.cnpj||'—')+'</span></div>';
+  html += '<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-top:6px;align-items:center">';
+  html += '<span><b style="color:var(--cyan)">Tabela:</b> <select id="imp-tabela" onchange="atualizarMatchImport()" style="font-size:11px">';
+  html += '<option value="filial"'+(parsed.tabela==='filial'?' selected':'')+'>Filial ES</option>';
+  html += '<option value="matriz"'+(parsed.tabela==='matriz'?' selected':'')+'>Matriz SP</option></select></span>';
+  html += '<span><b style="color:var(--cyan)">Cond. Pag:</b> '+(parsed.condicao||'—')+'</span>';
+  html += '<span><b style="color:var(--cyan)">Frete:</b> '+(parsed.frete||'cif').toUpperCase()+'</span></div>';
+  if (parsed.obs.trim()) html += '<div style="font-size:11px;margin-top:6px;color:var(--text2)"><b>Obs:</b> '+parsed.obs.trim().replace(/\n/g,'<br>')+'</div>';
+  html += '</div>';
+  html += '<div style="overflow-x:auto;max-height:340px;overflow-y:auto">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="background:var(--bg3);position:sticky;top:0">';
+  html += '<th style="padding:6px 8px;text-align:center">#</th><th style="padding:6px 8px;text-align:left">Cód.Rep</th>';
+  html += '<th style="padding:6px 8px;text-align:left">Produto no CRM</th><th style="padding:6px 8px;text-align:center">Qtd</th>';
+  html += '<th style="padding:6px 8px;text-align:center">Status</th></tr></thead>';
+  html += '<tbody id="imp-prods-body">'+withMatch.map(function(pp,idx){ return _renderImportRow(pp,idx); }).join('')+'</tbody></table></div>';
+  var nMatch = withMatch.filter(function(p){ return p.matched; }).length;
+  html += '<div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:space-between;align-items:center">';
+  html += '<span style="font-size:12px;color:var(--text2)" id="imp-match-count">'+nMatch+'/'+withMatch.length+' produtos encontrados</span>';
+  html += '<div style="display:flex;gap:8px"><button onclick="fecharImportModal()" style="background:var(--red,.c);border:none;color:#fff;border-radius:6px;padding:7px 14px;cursor:pointer;font-size:12px">&#10005; CANCELAR</button>';
+  html += '<button class="btn-green" onclick="confirmarImportacao()">&#10003; IMPORTAR PEDIDO</button></div></div>';
+  document.getElementById('pdf-import-content').innerHTML = html;
+}
+
+function _renderImportRow(pp, idx) {
+  var matchLabel = pp.matched
+    ? '<span style="color:var(--green)">'+pp.matched.codigo+' — '+(pp.matched.descricao||'').substring(0,35)+'</span><br><button style="font-size:10px;color:var(--text2);background:none;border:none;cursor:pointer;text-decoration:underline" onclick="limparMatchImport('+idx+')">alterar</button>'
+    : '<span style="color:var(--orange)">Não encontrado</span><br><input type="text" placeholder="buscar produto..." style="width:100%;font-size:11px;margin-top:3px" id="imp-s-'+idx+'" oninput="buscaImportProd(this,'+idx+')" autocomplete="off"><div id="imp-sl-'+idx+'" style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;max-height:120px;overflow-y:auto;display:none;font-size:11px;position:relative;z-index:10"></div>';
+  return '<tr id="imp-row-'+idx+'" style="border-bottom:1px solid var(--border)">'+
+    '<td style="padding:5px 8px;text-align:center;color:var(--text2)">'+pp.nr+'</td>'+
+    '<td style="padding:5px 8px;font-weight:700;color:var(--cyan)">'+pp.repCod+(pp.internalCode?'<br><span style="font-size:9px;color:var(--text2)">'+pp.internalCode+'</span>':'')+'</td>'+
+    '<td style="padding:5px 8px">'+matchLabel+'</td>'+
+    '<td style="padding:5px 8px;text-align:center">'+pp.qtd+'</td>'+
+    '<td style="padding:5px 8px;text-align:center;font-size:15px">'+(pp.matched?'&#9989;':'&#9888;')+'</td></tr>';
+}
+
+function buscaImportProd(input, idx) {
+  var q = input.value.toLowerCase();
+  var listEl = document.getElementById('imp-sl-'+idx);
+  if (!listEl) return;
+  if (!q||q.length<2) { listEl.style.display='none'; return; }
+  var tabela = document.getElementById('imp-tabela').value;
+  var pool = (tabela==='filial')?(DB.produtos_filial||DB.produtos):(DB.produtos_matriz||DB.produtos);
+  if (!pool||!pool.length) pool = DB.produtos||[];
+  var terms = q.split(/\s+/);
+  var res = pool.filter(function(p){ var txt=((p.codigo||'')+' '+(p.descricao||'')).toLowerCase(); return terms.every(function(t){ return txt.includes(t); }); }).slice(0,10);
+  listEl.innerHTML = '';
+  res.forEach(function(p) {
+    var d = document.createElement('div');
+    d.style.cssText = 'padding:4px 8px;cursor:pointer;border-bottom:1px solid var(--border)';
+    d.textContent = p.codigo+' — '+(p.descricao||'');
+    d.onmouseover=function(){ this.style.background='var(--bg3)'; };
+    d.onmouseout=function(){ this.style.background=''; };
+    d.onmousedown=function(e){ e.preventDefault(); _setMatchImport(idx,p); };
+    listEl.appendChild(d);
+  });
+  listEl.style.display = res.length?'block':'none';
+}
+
+function _setMatchImport(idx, prod) {
+  window._importProds[idx].matched = prod;
+  var row = document.getElementById('imp-row-'+idx);
+  if (row) { var tmp=document.createElement('tbody'); tmp.innerHTML=_renderImportRow(window._importProds[idx],idx); row.parentNode.replaceChild(tmp.firstChild,row); }
+  var n=window._importProds.filter(function(p){ return p.matched; }).length;
+  var c=document.getElementById('imp-match-count'); if(c) c.textContent=n+'/'+window._importProds.length+' produtos encontrados';
+}
+
+function limparMatchImport(idx) {
+  window._importProds[idx].matched = null;
+  var row = document.getElementById('imp-row-'+idx);
+  if (row) { var tmp=document.createElement('tbody'); tmp.innerHTML=_renderImportRow(window._importProds[idx],idx); row.parentNode.replaceChild(tmp.firstChild,row); }
+}
+
+function atualizarMatchImport() {
+  var tabela = document.getElementById('imp-tabela').value;
+  window._importParsed.tabela = tabela;
+  var rematched = _matchProdutosImport(window._importParsed.prods, tabela);
+  window._importProds = rematched;
+  var tbody = document.getElementById('imp-prods-body');
+  if (tbody) tbody.innerHTML = rematched.map(function(pp,idx){ return _renderImportRow(pp,idx); }).join('');
+  var n=rematched.filter(function(p){ return p.matched; }).length;
+  var c=document.getElementById('imp-match-count'); if(c) c.textContent=n+'/'+rematched.length+' produtos encontrados';
+}
+
+function confirmarImportacao() {
+  var parsed = window._importParsed;
+  var prods  = window._importProds;
+  // Tabela
+  var impTabela = document.getElementById('imp-tabela').value;
+  var selTab = document.getElementById('sel-tabela');
+  if (selTab) {
+    for (var i=0; i<selTab.options.length; i++) {
+      var ov = selTab.options[i].value.toLowerCase();
+      if ((impTabela==='filial' && (ov.includes('filial')||ov.includes(' es'))) ||
+          (impTabela==='matriz' && (ov.includes('matriz')||ov.includes('sant')||ov.includes('sp')))) {
+        selTab.value = selTab.options[i].value; break;
+      }
+    }
+    if (typeof onTabelaChange==='function') onTabelaChange();
+  }
+  // Condição pagamento
+  if (parsed.condicao) {
+    var sel = document.getElementById('sel-condicao');
+    if (sel) {
+      var found=false;
+      for (var j=0;j<sel.options.length;j++) { if (sel.options[j].text.trim()===parsed.condicao.trim()) { sel.value=sel.options[j].value; found=true; break; } }
+      if (!found) { var op=document.createElement('option'); op.value=parsed.condicao; op.textContent=parsed.condicao; sel.insertBefore(op,sel.lastElementChild); sel.value=parsed.condicao; }
+    }
+  }
+  // Frete
+  var freteEl = document.getElementById('sel-frete');
+  if (freteEl && parsed.frete) { freteEl.value = parsed.frete; if (typeof atualizarFrete==='function') atualizarFrete(); }
+  // Obs
+  if (parsed.obs.trim()) { var obsEl=document.getElementById('obs-pedido'); if(obsEl) obsEl.value=(obsEl.value?obsEl.value+'\n':'')+parsed.obs.trim(); }
+  // Produtos
+  var added=0, skipped=0;
+  prods.forEach(function(pp) {
+    if (!pp.matched) { skipped++; return; }
+    if (itensPedido.some(function(it){ return it.prod.codigo===pp.matched.codigo; })) { skipped++; return; }
+    itensPedido.push({ prod:pp.matched, qtd:pp.qtd, descItem:0 });
+    added++;
+  });
+  renderItensPedido(); atualizarTotais(); fecharImportModal();
+  if (skipped>0) alert('&#10003; '+added+' produto(s) importado(s).\n&#9888; '+skipped+' produto(s) ignorado(s) (não encontrado ou já no pedido).');
+}
+
+function fecharImportModal() {
+  document.getElementById('pdf-import-modal').style.display = 'none';
+}
 </script>
+<!-- MODAL IMPORTAR PDF -->
+<div id="pdf-import-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10000;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:min(720px,96vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.5)">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg3)">
+      <span style="font-weight:700;font-size:14px;color:var(--cyan)">&#128229; IMPORTAR PEDIDO DO REPRESENTANTE</span>
+      <button onclick="fecharImportModal()" style="background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
+    </div>
+    <div id="pdf-import-content" style="flex:1;overflow-y:auto;min-height:100px"></div>
+  </div>
+</div>
+
 </body>
-</html>
