@@ -903,7 +903,10 @@ body{padding-top:104px!important}
   <!-- COLUNA DIREITA: PEDIDO -->
   <div class="card" id="card-pedido">
     <div class="card-header" style="justify-content:space-between">
-      <span><span class="ico">&#128230;</span> Montar Pedido</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span><span class="ico">&#128230;</span> Montar Pedido</span>
+        <button class="btn-orange btn-sm" onclick="novoPedido()" style="font-size:.7rem;padding:3px 10px">&#10010; Novo Pedido</button>
+      </div>
       <div style="display:flex;align-items:center;gap:10px">
         <span id="num-pedido-display"></span>
         <span id="pedido-status-display" style="font-size:.7rem;letter-spacing:1px"></span>
@@ -918,7 +921,7 @@ body{padding-top:104px!important}
       <div class="flex" style="margin-bottom:10px;gap:8px">
         <div style="flex:1;min-width:120px">
           <div class="section-label">Condicao de Pagamento</div>
-          <select id="sel-condicao" onchange="atualizarTotais()">
+          <select id="sel-condicao" onchange="onCondicaoChange()">
             <option value="">— selecione —</option>
           </select>
         </div>
@@ -935,6 +938,7 @@ body{padding-top:104px!important}
             <option value="cif">CIF — Frete Incluso</option>
             <option value="cif-convenio">CIF CONVÊNIO</option>
             <option value="fob">FOB — Cliente</option>
+            <option value="retira">FOB — RETIRA</option>
             <option value="redespacho">CIF-REDESPACHO</option>
           </select>
         </div>
@@ -1084,12 +1088,34 @@ function fmt(v) {
 
 function popularCondicoes() {
   var sel = document.getElementById('sel-condicao');
+  sel.innerHTML = '<option value="">— selecione —</option>';
   DB.condicoes.forEach(function(c) {
     var op = document.createElement('option');
     op.value = c.nome;
-    op.textContent = c.nome + (c.desconto > 0 ? ' (' + (c.desconto*100).toFixed(1) + '% desc)' : '');
+    op.textContent = c.nome;
     sel.appendChild(op);
   });
+  var opC = document.createElement('option');
+  opC.value = '__personalizado__';
+  opC.textContent = '✏️ Personalizado...';
+  sel.appendChild(opC);
+}
+
+function onCondicaoChange() {
+  if (document.getElementById('sel-condicao').value === '__personalizado__') {
+    var nome = prompt('Digite a condição de pagamento:');
+    if (nome && nome.trim()) {
+      var sel = document.getElementById('sel-condicao');
+      var op = document.createElement('option');
+      op.value = nome.trim();
+      op.textContent = nome.trim();
+      sel.insertBefore(op, sel.lastElementChild);
+      sel.value = nome.trim();
+    } else {
+      document.getElementById('sel-condicao').value = '';
+    }
+  }
+  atualizarTotais();
 }
 
 function getCondicao() {
