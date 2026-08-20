@@ -34,7 +34,7 @@
   --glow-r:   0 0 8px rgba(230,69,60,.30);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:13px}
+html{height:100%}body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:13px}
 body{background-image:
   radial-gradient(circle at 20% 10%, rgba(108,75,244,.06) 0%, transparent 45%),
   radial-gradient(circle at 80% 90%, rgba(255,122,61,.05) 0%, transparent 45%);
@@ -989,7 +989,7 @@ body{padding-top:104px!important}
           <span></span>
           <span></span>
         </div>
-        <div id="itens-pedido" style="max-height:280px;overflow-y:auto"></div>
+        <div id="itens-pedido" style="max-height:none"></div>
       </div>
 
       <!-- TOTAIS -->
