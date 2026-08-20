@@ -982,7 +982,7 @@ body{padding-top:104px!important}
           <span style="text-align:center">#</span>
           <span>Produto</span>
           <span style="text-align:center">Emb</span>
-          <span style="text-align:center">Preco Unit</span>
+          <span style="text-align:center">Unit c/Desc</span>
           <span style="text-align:center">Qtd</span>
           <span style="text-align:center">Desc %</span>
           <span style="text-align:center">Total</span>
@@ -1619,9 +1619,6 @@ function renderItensPedido() {
     return;
   }
   var rows = '';
-  var _descComR = getDescComercial() / 100;
-  var _condR = getCondicao();
-  var _descCondR = _condR ? (_condR.desconto||0) : 0;
   for (var i = 0; i < itensPedido.length; i++) {
     var item = itensPedido[i];
     var p = item.prod;
@@ -1629,9 +1626,12 @@ function renderItensPedido() {
     var ipiUnit = valorIPIUnit(p);
     var qtdVal = (item.qtd !== '') ? item.qtd : '';
     var diVal = item.descItem || 0;
-    var di = diVal / 100;
-    var precoComDesc = preco * (1 - _descCondR) * (1 - _descComR) * (1 - di);
-    var ipiComDesc = ipiUnit * (1 - _descCondR) * (1 - _descComR) * (1 - di);
+    var _di = (item.descItem||0) / 100;
+    var _dCom = getDescComercial() / 100;
+    var _cond = getCondicao();
+    var _dCond = _cond ? (_cond.desconto||0) : 0;
+    var precoComDesc = preco * (1 - _dCond) * (1 - _dCom) * (1 - _di);
+    var ipiComDesc = ipiUnit * (1 - _dCond) * (1 - _dCom) * (1 - _di);
     rows += '<div class="pedido-item">';
     rows += '<span style="text-align:center;font-size:10px;color:var(--text2);font-weight:700">' + (i+1) + '</span>';
     rows += '<span style="font-size:12px"><span style="color:var(--cyan);font-weight:700">' + (p.codigo||'') + '</span> ' + (p.descricao||'') + '</span>';
@@ -3335,7 +3335,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 20/08/2026 09:48</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 20/08/2026 10:45</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
