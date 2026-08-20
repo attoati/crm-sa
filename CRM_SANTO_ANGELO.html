@@ -2388,7 +2388,7 @@ function exportarPedidoExcel() {
   var descCond = cond ? (cond.desconto||0) : 0;
   var descCom = getDescComercial() / 100;
   var tipo = document.getElementById('sel-frete').value;
-  var freteLabel = tipo==='cif' ? 'CIF — Frete Incluso' : tipo==='cif-convenio' ? 'CIF Convenio' : tipo==='cif-redespacho' ? 'CIF - Redespacho' : 'FOB';
+  var freteLabel = tipo==='cif' ? 'CIF — Frete Incluso' : tipo==='cif-convenio' ? 'CIF CONVÊNIO' : tipo==='redespacho' ? 'CIF-REDESPACHO' : tipo==='retira' ? 'FOB — RETIRA' : 'FOB — Cliente';
   var tabelaEl = document.getElementById('sel-tabela');
   var tabelaLabel = tabelaEl && tabelaEl.selectedIndex>=0 ? tabelaEl.options[tabelaEl.selectedIndex].text : '-';
   var numero = numPedidoAtual || '(nao salvo)';
@@ -2407,7 +2407,7 @@ function exportarPedidoExcel() {
   rows.push(['CONDICOES COMERCIAIS']);
   rows.push(['Cond. Pagamento', document.getElementById('sel-condicao').value||'-', 'Desc. Comercial', (descCom>0?(descCom*100).toFixed(2)+'%':'Sem desconto'), 'Frete', freteLabel, tabelaLabel]);
   rows.push([]);
-  rows.push(['Codigo','Descricao','Qtd','Preco','IPI%','Desc%','Total']);
+  rows.push(['Codigo','Descricao','Qtd','Preco','IPI%','Desc%','Preco Unit c/Desc','Total']);
 
   var bruto = 0;
   for (var i = 0; i < itensPedido.length; i++) {
@@ -2420,10 +2420,11 @@ function exportarPedidoExcel() {
     var tot = preco * qtd * (1-descCond) * (1-descCom) * (1-di);
     bruto += preco * qtd;
     var ipiPct = prod.ipi ? (parseFloat((prod.ipi*100).toFixed(2))) : 0;
-    var dcPct = (descCom*100) + (di*100);
-    rows.push([prod.codigo||'', prod.descricao||'', qtd, Number(precoBase.toFixed(2)), ipiPct/100, dcPct/100, Number(tot.toFixed(2))]);
+    var dcPct = parseFloat(((descCom + di)*100).toFixed(2));
+    var precoUnitDesc = precoBase * (1-descCond) * (1-descCom) * (1-di);
+    rows.push([prod.codigo||'', prod.descricao||'', qtd, Number(precoBase.toFixed(2)), ipiPct/100, dcPct, Number(precoUnitDesc.toFixed(2)), Number(tot.toFixed(2))]);
     if (item.obsItem && item.obsItem.trim()) {
-      rows.push(['', 'Obs: '+item.obsItem, '', '', '', '', '']);
+      rows.push(['', 'Obs: '+item.obsItem, '', '', '', '', '', '']);
     }
   }
 
@@ -2431,10 +2432,10 @@ function exportarPedidoExcel() {
   var apCond = bruto * descCond;
   var apCom  = (bruto - apCond) * descCom;
   var liquido = calcTotalLiquido();
-  rows.push(['', '', '', '', '', 'Subtotal bruto:', Number(bruto.toFixed(2))]);
-  if (descCond>0) rows.push(['', '', '', '', '', 'Desc. condicao ('+(descCond*100).toFixed(1)+'%):', -Number(apCond.toFixed(2))]);
-  if (descCom>0)  rows.push(['', '', '', '', '', 'Desc. comercial ('+(descCom*100).toFixed(2)+'%):', -Number(apCom.toFixed(2))]);
-  rows.push(['', '', '', '', '', 'TOTAL LIQUIDO:', Number(liquido.toFixed(2))]);
+  rows.push(['', '', '', '', '', '', 'Subtotal bruto:', Number(bruto.toFixed(2))]);
+  if (descCond>0) rows.push(['', '', '', '', '', '', 'Desc. condicao ('+(descCond*100).toFixed(1)+'%):', -Number(apCond.toFixed(2))]);
+  if (descCom>0)  rows.push(['', '', '', '', '', '', 'Desc. comercial ('+(descCom*100).toFixed(2)+'%):', -Number(apCom.toFixed(2))]);
+  rows.push(['', '', '', '', '', '', 'TOTAL LIQUIDO:', Number(liquido.toFixed(2))]);
 
   var obs = document.getElementById('obs-pedido').value;
   if (obs) { rows.push([]); rows.push(['Observacoes:', obs]); }
@@ -2446,13 +2447,15 @@ function exportarPedidoExcel() {
     var ipiCell = ws[XLSX.utils.encode_cell({r:R, c:4})];
     if (ipiCell && typeof ipiCell.v === 'number') ipiCell.z = '0.00%';
     var descCell = ws[XLSX.utils.encode_cell({r:R, c:5})];
-    if (descCell && typeof descCell.v === 'number' && descCell.v < 1) descCell.z = '0.00%';
+    if (descCell && typeof descCell.v === 'number') descCell.z = '0.00';
     var precoCell = ws[XLSX.utils.encode_cell({r:R, c:3})];
     if (precoCell && typeof precoCell.v === 'number') precoCell.z = 'R$ #,##0.00';
-    var totCell = ws[XLSX.utils.encode_cell({r:R, c:6})];
+    var unitDescCell = ws[XLSX.utils.encode_cell({r:R, c:6})];
+    if (unitDescCell && typeof unitDescCell.v === 'number') unitDescCell.z = 'R$ #,##0.00';
+    var totCell = ws[XLSX.utils.encode_cell({r:R, c:7})];
     if (totCell && typeof totCell.v === 'number') totCell.z = 'R$ #,##0.00';
   }
-  ws['!cols'] = [{wch:16},{wch:38},{wch:8},{wch:12},{wch:8},{wch:24},{wch:14}];
+  ws['!cols'] = [{wch:16},{wch:38},{wch:8},{wch:12},{wch:7},{wch:10},{wch:16},{wch:14}];
 
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Pedido');
@@ -3358,7 +3361,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 20/08/2026 11:15</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 20/08/2026 11:40</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
