@@ -3900,37 +3900,60 @@ async function _processPDFImport(buf) {
 }
 
 function _parsePedidoText(text) {
-  var r = { pedidoNr:'', fantasia:'', cnpj:'', tabela:'matriz', condicao:'', frete:'cif', obs:'', rawText: text, prods:[] };
+  var r = { pedidoNr:'', fantasia:'', cnpj:'', tabela:'matriz', condicao:'', frete:'cif', obs:'', descontos:[], rawText: text, prods:[] };
   var m;
   m = text.match(/Pedido\s+N[°º\.o]\s*(\d+)/i); if (m) r.pedidoNr = m[1];
   m = text.match(/Nome\s+Fantasia[:\s]+(.+?)(?=CNPJ|Inscrição|\n)/i); if (m) r.fantasia = m[1].trim();
-  m = text.match(/CNPJ[:\s]+([\d.\/-]+)/i); if (m) r.cnpj = m[1].trim();
+  // Client CNPJ: prefer the one right after "Cliente:" block (skip rep CNPJ if exists)
+  m = text.match(/Cliente[:\s]+[\s\S]+?CNPJ[:\s]+([\d.\/-]+)/i);
+  if (!m) m = text.match(/CNPJ[:\s]+([\d.\/-]+)/i);
+  if (m) r.cnpj = m[1].trim();
   m = text.match(/Representada[:\s]+(.+)/i);
   if (m) {
     var rep = m[1].trim();
     r.tabela = /filial|\bES\b/i.test(rep) ? 'filial' : 'matriz';
     r.obs += 'Representada: ' + rep + '\n';
   }
-  m = text.match(/Condi[çc][aã]o\s+de\s+Pagamento[:\s]+(.+?)(?=Data|Ordem|\n)/i); if (m) r.condicao = m[1].trim();
+  // Condição: may be on next line when "Data de Emissão" appears inline
+  m = text.match(/Condi[çc][aã]o\s+de\s+Pagamento[:\s]+(.+?)(?=Data|Ordem|Tipo|\n|$)/i);
+  var condOk = m && m[1].trim() && /\d/.test(m[1]); // must contain a digit to be a real condition
+  if (condOk) {
+    r.condicao = m[1].trim();
+  } else {
+    m = text.match(/Condi[çc][aã]o\s+de\s+Pagamento[^\n]*\n\s*(.+)/i);
+    if (m) r.condicao = m[1].replace(/\s*\d{2}\/\d{2}\/\d{4}.*$/, '').trim();
+  }
   m = text.match(/Transportadora[:\s\n]+(CIF|FOB)/i); if (m) r.frete = m[1].toLowerCase();
+  m = text.match(/FRET[E]?\s+(CIF|FOB)/i); if (m) r.frete = m[1].toLowerCase();
   m = text.match(/Informa[çc][õo]es\s+Adicionais[:\s\n]+(.+?)(?=\n\n|Preço\s+Preço|#\s+Código)/is);
   if (m) r.obs += m[1].trim();
   m = text.match(/Ordem\s+de\s+Compra[:\s]+(.+?)(?=Vendedor|\n)/i);
   if (m) r.obs = r.obs.trim() + '\nOC: ' + m[1].trim();
+  // Global discount: extract "XX% + XX% + XX%" pattern (Nathan format)
+  m = text.match(/\b(\d+(?:[,.]\d+)?%(?:\s*\+\s*\d+(?:[,.]\d+)?%)+)/);
+  if (m) {
+    var dPercs = m[1].match(/(\d+(?:[,.]\d+)?)/g);
+    if (dPercs) r.descontos = dPercs.map(function(d){ return parseFloat(d.replace(',','.')); });
+  }
+  // Single % discount (Gustavssom format): take first item's discount %
+  if (!r.descontos.length) {
+    var gm = text.match(/[\d.,]+\s+R\$\s*[\d.,]+\s+(\d+)%\s+R\$/);
+    if (gm) r.descontos = [parseFloat(gm[1])];
+  }
 
   // Parse products
   var lines = text.split('\n');
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i];
     var nr=null, repCod=null, qtd=null, prices=[], internalCode=null;
-    var pm1, pm2;
+    var pm1, pm2, pm2b, pmG;
 
     // Pattern 1: "nr CODE qty UNIT" — code starts uppercase (no /i flag to avoid matching description words)
     pm1 = line.match(/^\s*(\d{1,3})\s+([A-Z][A-Z0-9\/\-]+(?:\s+[A-Z][A-Z0-9\/\-]+){0,2})\s+([\d.]+)\s+(MTS?|PC|UN|CX|MT)\b/);
     if (pm1) {
       nr = parseInt(pm1[1]);
       if (nr >= 1 && nr <= 200) {
-        repCod = pm1[2].trim().replace(/\s+[a-z].*/, '').trim(); // strip trailing lowercase description words
+        repCod = pm1[2].trim().replace(/\s+[a-z].*/, '').trim();
         if (/(código|produto|qtde|preço|tabela|dados|vendedor|ordem)/i.test(repCod)) nr = null;
         else qtd = parseInt(pm1[3].replace(/\./g,'')) || 1;
       } else nr = null;
@@ -3943,28 +3966,86 @@ function _parsePedidoText(text) {
         nr = parseInt(pm2[1]);
         if (nr >= 1 && nr <= 200) {
           qtd = parseInt(pm2[2].replace(/\./g,'')) || 1;
-          var prevCtx = lines.slice(Math.max(0,i-4), i).join(' ');
-          var cm1 = prevCtx.match(/\b(\d{5,})\b/);
-          var cm2 = prevCtx.match(/\b([A-Z][A-Z0-9\/\-]{2,15})\b/);
-          repCod = (cm1 ? cm1[1] : '') + (cm2 ? (cm1?' ':'')+cm2[1] : '');
-          repCod = repCod.trim() || '?';
+          var prevRevP2 = lines.slice(Math.max(0,i-6), i).slice().reverse();
+          repCod = '?';
+          for (var riP2=0; riP2<prevRevP2.length; riP2++) {
+            var rmP2 = prevRevP2[riP2].match(/\b(\d{5,})\b/);
+            if (rmP2) { repCod = rmP2[1]; break; }
+            var rmP2b = prevRevP2[riP2].match(/\b([A-Z][A-Z0-9\/\-]{2,15})\b/);
+            if (rmP2b && !/^\s*\d/.test(prevRevP2[riP2])) { repCod = rmP2b[1]; break; }
+          }
+        } else nr = null;
+      }
+    }
+
+    // Pattern 2b: "nr MIXED-CASE-DESC qty UNIT" (e.g. "1 P10 x P10 30 PC", "5 Linha 4 50 PC")
+    if (nr === null) {
+      pm2b = line.match(/^\s*(\d{1,3})\s+[A-Za-z].+\b([\d.,]+)\s+(MTS?|PC|UN|CX|MT)\b/);
+      if (pm2b) {
+        nr = parseInt(pm2b[1]);
+        if (nr >= 1 && nr <= 200) {
+          qtd = parseInt(pm2b[2].replace(/[.,]/g,'')) || 1;
+          if (/(código|produto|qtde|preço|tabela|dados|vendedor|ordem|transportadora)/i.test(line)) {
+            nr = null;
+          } else {
+            var prevRevB = lines.slice(Math.max(0,i-6), i).slice().reverse();
+            repCod = '?';
+            for (var riB=0; riB<prevRevB.length; riB++) {
+              var rmB = prevRevB[riB].match(/\b(\d{4,6})\b/);
+              if (rmB && !/^\s*\d{1,3}\s+(MTS?|PC|UN|CX|[A-Z])/.test(prevRevB[riB])) { repCod = rmB[1]; break; }
+            }
+          }
+        } else nr = null;
+      }
+    }
+
+    // Pattern 3 (Gustavssom format): "nr [desc?] qty R$ preco DESC% R$ liq..."
+    if (nr === null) {
+      pmG = line.match(/^\s*(\d{1,2})\s+(.*?)\s*([\d.]+)\s+R\$\s*([\d.,]+)\s+(\d+)%\s+R\$\s*([\d.,]+)/);
+      if (pmG) {
+        nr = parseInt(pmG[1]);
+        if (nr >= 1 && nr <= 200) {
+          qtd = parseInt(pmG[3].replace(/\./g,'')) || 1;
+          var ptab = parseFloat(pmG[4].replace(/\./g,'').replace(',','.')) || 0;
+          var pliq = parseFloat(pmG[6].replace(/\./g,'').replace(',','.')) || 0;
+          prices = [ptab, pliq];
+          // Reverse search: nearest "XXXXX -" above this line
+          var prevRevG = lines.slice(Math.max(0,i-5), i).slice().reverse();
+          repCod = '?';
+          for (var riG=0; riG<prevRevG.length; riG++) {
+            var rmG = prevRevG[riG].match(/\b(\d{4,6})\s*-/);
+            if (rmG) { repCod = rmG[1]; break; }
+          }
+          var nextLinesG = lines.slice(i+1, Math.min(lines.length, i+4));
+          var intMG = nextLinesG.join(' ').match(/(\d\.\d\.\d\d\.\d\d\d\.\d\d\d)/);
+          internalCode = intMG ? intMG[1] : null;
         } else nr = null;
       }
     }
 
     if (nr && qtd && repCod) {
-      var ctx = lines.slice(Math.max(0,i-2), i+5).join(' ');
-      var priceRe = /R\$\s*([\d.,]+)/g, pm3;
-      while ((pm3 = priceRe.exec(ctx)) !== null) {
-        var v = parseFloat(pm3[1].replace(/\./g,'').replace(',','.')); if (v>0) prices.push(v);
+      if (!prices.length) {
+        var ctx = lines.slice(Math.max(0,i-2), i+5).join(' ');
+        var priceRe = /R\$\s*([\d.,]+)/g, prM;
+        while ((prM = priceRe.exec(ctx)) !== null) {
+          var v = parseFloat(prM[1].replace(/\./g,'').replace(',','.')); if (v>0) prices.push(v);
+        }
       }
-      var nextCtx = lines.slice(Math.max(0,i-4), i+15).join(' '); // wide window for internal codes
-      var codM = nextCtx.match(/(\d\.\d\.\d\d\.\d\d\d\.\d\d\d)/);
-      internalCode = codM ? codM[1] : null;
+      if (!internalCode) {
+        // Forward-only search: internal code is always AFTER the item line
+        var wideCtx = lines.slice(i, Math.min(lines.length, i+12)).join(' ');
+        var codM = wideCtx.match(/(\d\.\d\.\d\d\.\d\d\d\.\d\d\d)/);
+        internalCode = codM ? codM[1] : null;
+      }
       r.prods.push({nr:nr, repCod:repCod, internalCode:internalCode, qtd:qtd,
         precoTabela:prices[0]||0, precoLiquido:prices[1]||prices[0]||0});
     }
   }
+  // Collect item-level Obs lines
+  var obsLines = [];
+  lines.forEach(function(l){ var mo=l.match(/^\s*Obs[:\s]+(.+)/i); if(mo) obsLines.push(mo[1].trim()); });
+  if (obsLines.length) r.obs = (r.obs.trim() + '\n' + obsLines.join('\n')).trim();
+
   var seen = {};
   r.prods = r.prods.filter(function(p){ if(seen[p.nr]) return false; seen[p.nr]=true; return true; });
   r.prods.sort(function(a,b){ return a.nr-b.nr; });
@@ -4111,6 +4192,14 @@ function confirmarImportacao() {
   // Frete
   var freteEl = document.getElementById('sel-frete');
   if (freteEl && parsed.frete) { freteEl.value = parsed.frete; if (typeof atualizarFrete==='function') atualizarFrete(); }
+  // Desconto comercial
+  if (parsed.descontos && parsed.descontos.length) {
+    ['desc-com-1','desc-com-2','desc-com-3','desc-com-4'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+    parsed.descontos.slice(0,4).forEach(function(d,i){
+      var el=document.getElementById('desc-com-'+(i+1)); if(el&&d>0) el.value=d;
+    });
+    if (typeof onDescComChange==='function') onDescComChange();
+  }
   // Obs
   if (parsed.obs.trim()) { var obsEl=document.getElementById('obs-pedido'); if(obsEl) obsEl.value=(obsEl.value?obsEl.value+'\n':'')+parsed.obs.trim(); }
   // Produtos
