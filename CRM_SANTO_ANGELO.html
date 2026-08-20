@@ -694,6 +694,29 @@ body{padding-top:104px!important}
   .topbar-logo img{height:56px!important}
   body{padding-top:96px!important}
 }
+/* ── SMARTPHONE (≪600px) ────────────────────────────────────────── */
+@media screen and (max-width:600px){
+  .topbar{height:auto!important;min-height:50px!important;flex-wrap:wrap!important;align-content:flex-start!important;padding:6px 10px!important;gap:4px 8px!important}
+  .topbar-logo img{height:34px!important}
+  .topbar-logo .header-sub{display:none!important}
+  .topbar-logo .dot{width:8px!important;height:8px!important}
+  .topbar-pedidos{order:2!important;flex-shrink:0!important}
+  .topbar-client{order:3!important;flex:1 1 100%!important;max-width:100%!important;min-width:0!important}
+  .topbar-actions{display:none!important}
+  body{padding-top:124px!important}
+  .topbar-pedidos-panel{top:126px!important;width:calc(100vw - 20px)!important;left:10px!important}
+  .pedido-header{display:none!important}
+  .pedido-item{grid-template-columns:20px 1fr 58px 74px 28px 28px!important;padding:6px 8px!important;gap:3px!important}
+  .pedido-item>span:nth-child(3),.pedido-item>span:nth-child(4){display:none!important}
+  .pedido-item>input:last-of-type{display:none!important}
+  .pedido-item>input:first-of-type{min-height:38px!important;font-size:14px!important;padding:4px!important}
+  .pedido-item>span:nth-child(2){overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important}
+  .flex.mt10[style*="flex-wrap"]{position:sticky!important;bottom:0!important;z-index:100!important;background:var(--card)!important;padding:8px 0!important;border-top:1px solid var(--border)!important;margin:0!important;gap:6px!important}
+  .flex.mt10[style*="flex-wrap"] button,.flex.mt10[style*="flex-wrap"] label{flex:1!important;min-width:0!important;font-size:11.5px!important;padding:8px 4px!important}
+  .container{padding:6px!important}
+  .card-body{padding:10px!important}
+  #busca-produto{font-size:15px!important}
+}
 /* ─────────────────────────────────────────────────────────────── */
 
 /* ── FICHA CLIENTE: modal flutuante ───────────────────────────── */
@@ -3335,7 +3358,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 20/08/2026 10:45</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 20/08/2026 11:15</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
