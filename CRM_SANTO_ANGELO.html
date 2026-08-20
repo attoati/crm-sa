@@ -2307,8 +2307,28 @@ function exportarPDF() {
     pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);
     heightLeft-=(pageH-margin*2);
     while(heightLeft>0){position=margin-(imgHeight-heightLeft);pdf.addPage();pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);heightLeft-=(pageH-margin*2);}
-    pdf.save(nomeArq);
+    _salvarArquivo(pdf.output('blob'), nomeArq, 'application/pdf');
   });
+}
+// Salvar arquivo com diálogo de pasta (File System Access API) ou download padrão
+async function _salvarArquivo(blob, nomeArq, mimeType) {
+  if (window.showSaveFilePicker) {
+    var ext = nomeArq.split('.').pop().toLowerCase();
+    var mimes = { pdf:'application/pdf', xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' };
+    try {
+      var handle = await window.showSaveFilePicker({
+        suggestedName: nomeArq,
+        types: [{ description: ext.toUpperCase(), accept: { [mimes[ext]||mimeType]: ['.'+ext] } }]
+      });
+      var writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    } catch(e) { if (e.name === 'AbortError') return; }
+  }
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href=url; a.download=nomeArq; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
 }
 function exportarExcel() { exportarPedidoExcel(); }
 function exportarAmbos() { exportarPDF(); exportarExcel(); }
@@ -2339,7 +2359,9 @@ function exportarPedidoExcel() {
   var descCond = cond ? (cond.desconto||0) : 0;
   var descCom = getDescComercial() / 100;
   var tipo = document.getElementById('sel-frete').value;
-  var freteLabel = (tipo === 'cif') ? 'CIF' : (tipo === 'cif-redespacho' ? 'CIF - Redespacho' : 'FOB');
+  var freteLabel = tipo==='cif' ? 'CIF — Frete Incluso' : tipo==='cif-convenio' ? 'CIF Convenio' : tipo==='cif-redespacho' ? 'CIF - Redespacho' : 'FOB';
+  var tabelaEl = document.getElementById('sel-tabela');
+  var tabelaLabel = tabelaEl && tabelaEl.selectedIndex>=0 ? tabelaEl.options[tabelaEl.selectedIndex].text : '-';
   var numero = numPedidoAtual || '(nao salvo)';
   var data = new Date().toLocaleDateString('pt-BR');
 
@@ -2354,7 +2376,7 @@ function exportarPedidoExcel() {
   rows.push(['Endereco', (c.endereco||'-')+(c.bairro?' - '+c.bairro:''), '', '', '', '', '']);
   rows.push([]);
   rows.push(['CONDICOES COMERCIAIS']);
-  rows.push(['Cond. Pagamento', document.getElementById('sel-condicao').value||'-', 'Desc. Comercial', (descCom>0?(descCom*100).toFixed(2)+'%':'Sem desconto'), 'Frete', freteLabel, '']);
+  rows.push(['Cond. Pagamento', document.getElementById('sel-condicao').value||'-', 'Desc. Comercial', (descCom>0?(descCom*100).toFixed(2)+'%':'Sem desconto'), 'Frete', freteLabel, tabelaLabel]);
   rows.push([]);
   rows.push(['Codigo','Descricao','Qtd','Preco','IPI%','Desc%','Total']);
 
@@ -2406,7 +2428,9 @@ function exportarPedidoExcel() {
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Pedido');
   var nomeArq = _nomePedido() + '.xlsx';
-  XLSX.writeFile(wb, nomeArq);
+  var arr = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  var blob = new Blob([arr], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  _salvarArquivo(blob, nomeArq, 'application/xlsx');
 }
 
 function gerarHTMLPedido() {
@@ -3892,11 +3916,43 @@ async function _processPDFImport(buf) {
         if (line) allText += line + '\n';
       });
     }
+    // PDF escaneado? tentar OCR
+    if (!allText.trim()) {
+      content.innerHTML = '<div style="text-align:center;padding:30px;font-size:13px">&#128269; PDF escaneado detectado — iniciando OCR (aguarde...).</div>';
+      allText = await _ocrPDF(pdf, content);
+    }
     var parsed = _parsePedidoText(allText);
     _renderImportModal(parsed);
   } catch(err) {
     content.innerHTML = '<div style="color:var(--red);padding:20px">Erro ao ler PDF: ' + err.message + '</div>';
   }
+}
+
+async function _ocrPDF(pdfDoc, contentEl) {
+  if (!window.Tesseract) {
+    await new Promise(function(resolve, reject) {
+      var s = document.createElement('script');
+      s.src = 'https://unpkg.com/tesseract.js@4/dist/tesseract.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+  var resultText = '';
+  for (var p = 1; p <= pdfDoc.numPages; p++) {
+    var page = await pdfDoc.getPage(p);
+    var viewport = page.getViewport({scale: 2.5});
+    var canvas = document.createElement('canvas');
+    canvas.width = viewport.width; canvas.height = viewport.height;
+    await page.render({canvasContext: canvas.getContext('2d'), viewport: viewport}).promise;
+    var result = await Tesseract.recognize(canvas, 'por', {
+      logger: function(m) {
+        if (m.status === 'recognizing text' && contentEl)
+          contentEl.innerHTML = '<div style="text-align:center;padding:30px;font-size:13px">&#128269; OCR... ' + Math.round(m.progress*100) + '%</div>';
+      }
+    });
+    resultText += result.data.text + '\n';
+  }
+  return resultText;
 }
 
 function _parsePedidoText(text) {
