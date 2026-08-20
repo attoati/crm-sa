@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="0; url=CRM_SANTO_ANGELO.html">
+<title>CRM Santo Angelo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+body{font-family:Arial,sans-serif;background:#1a1535;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box}
+.card{background:#fff;border-radius:16px;padding:32px;text-align:center;max-width:400px;width:100%}
+h2{color:#6c4bf4;margin:0 0 8px}p{color:#555;font-size:14px;margin:0 0 20px}
+#qrcode{display:flex;justify-content:center;margin:20px 0}
+.url-box{background:#f4f3fb;border-radius:8px;padding:12px;font-size:13px;color:#333;word-break:break-all;margin:16px 0;border:2px solid #6c4bf4}
+.steps{text-align:left;font-size:13px;color:#555;line-height:1.8}.steps li{margin-bottom:4px}
+.badge{background:#6c4bf4;color:#fff;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;display:inline-block;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="badge">&#128241; ACESSO PELO CELULAR</div>
+  <h2>CRM Santo Angelo</h2>
+  <p>Escaneie o QR Code com a c&#226;mera do celular</p>
+  <div id="qrcode"></div>
+  <div class="url-box">https://attoati.github.io/crm-sa/CRM_SANTO_ANGELO.html</div>
+  <ol class="steps">
+    <li>Aponte a c&#226;mera do celular para o QR Code</li>
+    <li>Toque no link que aparecer</li>
+    <li>O CRM abre no navegador do celular</li>
+    <li><strong>Chrome:</strong> menu &#8942; &#8594; "Adicionar &#224; tela inicial"</li>
+    <li><strong>iPhone:</strong> bot&#227;o compartilhar &#8594; "Tela de In&#237;cio"</li>
+  </ol>
+</div>
+<script>
+new QRCode(document.getElementById('qrcode'),{
+  text:'https://attoati.github.io/crm-sa/CRM_SANTO_ANGELO.html',
+  width:220,height:220,colorDark:'#6c4bf4',colorLight:'#ffffff',
+  correctLevel:QRCode.CorrectLevel.H
+});
+</script>
+</body>
+</html>
