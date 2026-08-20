@@ -1619,6 +1619,9 @@ function renderItensPedido() {
     return;
   }
   var rows = '';
+  var _descComR = getDescComercial() / 100;
+  var _condR = getCondicao();
+  var _descCondR = _condR ? (_condR.desconto||0) : 0;
   for (var i = 0; i < itensPedido.length; i++) {
     var item = itensPedido[i];
     var p = item.prod;
@@ -1626,14 +1629,17 @@ function renderItensPedido() {
     var ipiUnit = valorIPIUnit(p);
     var qtdVal = (item.qtd !== '') ? item.qtd : '';
     var diVal = item.descItem || 0;
+    var di = diVal / 100;
+    var precoComDesc = preco * (1 - _descCondR) * (1 - _descComR) * (1 - di);
+    var ipiComDesc = ipiUnit * (1 - _descCondR) * (1 - _descComR) * (1 - di);
     rows += '<div class="pedido-item">';
     rows += '<span style="text-align:center;font-size:10px;color:var(--text2);font-weight:700">' + (i+1) + '</span>';
     rows += '<span style="font-size:12px"><span style="color:var(--cyan);font-weight:700">' + (p.codigo||'') + '</span> ' + (p.descricao||'') + '</span>';
     rows += '<span style="text-align:center;font-size:11.5px;color:var(--text2)">' + (p.embalagem||1) + '</span>';
-    rows += '<span style="text-align:center;font-size:12.5px;font-weight:700;color:var(--green)">' + fmt(preco);
-    rows += '<br><span style="font-weight:400;font-size:9px;color:var(--text2);opacity:.75">Tab: ' + fmt(p.preco_tabela||0) + '</span>';
-    if (ipiUnit > 0) {
-      rows += '<br><span style="font-weight:500;font-size:9.5px;color:var(--text2)">+ IPI: ' + fmt(ipiUnit) + '</span>';
+    rows += '<span style="text-align:center;font-size:12.5px;font-weight:700;color:var(--green)">' + fmt(precoComDesc);
+    rows += '<br><span style="font-weight:400;font-size:9px;color:var(--text2);opacity:.75">Tab: ' + fmt(preco) + '</span>';
+    if (ipiComDesc > 0) {
+      rows += '<br><span style="font-weight:500;font-size:9.5px;color:var(--text2)">+ IPI: ' + fmt(ipiComDesc) + '</span>';
     }
     rows += '</span>';
     rows += '<input type="number" id="qty_' + i + '" value="' + qtdVal + '" placeholder="Qtd" min="1" style="text-align:center" oninput="onQtyChange(' + i + ',this.value)">';
