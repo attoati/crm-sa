@@ -4180,6 +4180,28 @@ function confirmarImportacao() {
     }
     if (typeof onTabelaChange==='function') onTabelaChange();
   }
+  // Cliente — buscar por CNPJ, depois por fantasia/nome
+  if ((parsed.cnpj || parsed.fantasia) && DB.clientes) {
+    var clienteEncontrado = null;
+    if (parsed.cnpj) {
+      var cnpjClean = parsed.cnpj.replace(/\D/g,'');
+      clienteEncontrado = DB.clientes.find(function(c){ return String(c.cnpj||'').replace(/\D/g,'') === cnpjClean; });
+    }
+    if (!clienteEncontrado && parsed.fantasia) {
+      var fant = parsed.fantasia.toLowerCase().trim();
+      clienteEncontrado = DB.clientes.find(function(c){
+        var n=(c.nome||'').toLowerCase(), f=(c.fantasia||'').toLowerCase();
+        return f===fant || n===fant || f.includes(fant) || fant.includes(f);
+      });
+    }
+    if (clienteEncontrado) {
+      var inp = document.getElementById('busca-cliente');
+      if (inp) inp.value = (clienteEncontrado.fantasia && clienteEncontrado.fantasia !== clienteEncontrado.nome)
+        ? clienteEncontrado.nome + ' | ' + clienteEncontrado.fantasia
+        : (clienteEncontrado.nome || clienteEncontrado.fantasia || '');
+      selecionarCliente(clienteEncontrado);
+    }
+  }
   // Condição pagamento
   if (parsed.condicao) {
     var sel = document.getElementById('sel-condicao');
