@@ -768,6 +768,20 @@ body{padding-top:104px!important}
   50%{box-shadow:0 0 0 5px rgba(108,75,244,.55);border-color:#8b6ff7}
 }
 </style>
+<style id="edit-item-styles">
+.btn-edit-item{background:transparent;border:none;cursor:pointer;font-size:14px;color:var(--text2);opacity:0;transition:opacity .15s;padding:0 3px;line-height:1}
+.pedido-item:hover .btn-edit-item{opacity:.75}
+.btn-edit-item:hover{opacity:1!important;color:var(--cyan)}
+.item-edit-overlay{grid-column:1/-1;background:var(--bg3);border:1px solid rgba(108,75,244,.5);border-radius:7px;padding:10px 12px;margin:2px 0 4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.item-edit-wrapper{position:relative;flex:1;min-width:160px}
+.item-edit-overlay input{width:100%;background:rgba(255,255,255,.08);border:1.5px solid rgba(108,75,244,.5);color:#fff;border-radius:5px;padding:6px 10px;font-size:12px;box-sizing:border-box}
+.item-edit-overlay input::placeholder{color:rgba(255,255,255,.4)}
+.edit-results{position:absolute;z-index:9999;background:var(--card);border:1px solid var(--border);border-radius:0 0 7px 7px;width:100%;max-height:200px;overflow-y:auto;left:0;top:100%;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.edit-result-row{padding:7px 12px;cursor:pointer;font-size:11.5px;border-bottom:1px solid var(--border)}
+.edit-result-row:hover,.edit-result-row.ativo{background:var(--bg3);color:var(--cyan)}
+#toast-salvo{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(60px);background:linear-gradient(90deg,#1a1060,#2c2060);border:1px solid rgba(0,230,118,.5);border-radius:10px;color:#fff;padding:13px 26px;font-size:13.5px;font-weight:600;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;pointer-events:none;white-space:nowrap}
+#toast-salvo.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
 <style id="mobile-pdf-fix">
 @media screen and (max-width:600px){
   #pdfModalBox{overflow:unset!important}
@@ -782,6 +796,7 @@ body{padding-top:104px!important}
 </head>
 <body>
 
+<div id="toast-salvo">&#9989; Pedido salvo! Nr: <span id="toast-nr"></span></div>
 <div id="file-origin-warning" style="display:none;background:#c0392b;color:#fff;font-size:13px;text-align:center;padding:10px 20px;letter-spacing:0.3px;position:relative;z-index:9999">
   &#9888; <b>ATENCAO:</b> Voce abriu pelo computador (file://). Os pedidos salvos aqui sao <u>diferentes</u> dos pedidos no servidor.
   &nbsp;&nbsp;
@@ -907,7 +922,7 @@ body{padding-top:104px!important}
   </div>
 
   <!-- Ações -->
-  <div class="topbar-actions">
+  <div class="topbar-actions"><span id="topbar-nr-pedido" style="display:none;background:rgba(0,230,118,.13);border:1px solid rgba(0,230,118,.4);color:#00e676;border-radius:5px;padding:3px 10px;font-size:11.5px;font-weight:700;letter-spacing:.5px;margin-right:4px"></span>
     <button class="tb-btn tb-orange" onclick="abrirPainelReativ()">&#9889; Reativa&#231;&#227;o</button>
     <button class="tb-btn tb-blue" onclick="abrirApresentacao()">&#128202; Apresenta&#231;&#227;o</button>
     <button class="tb-btn" onclick="exportarPedidos()">&#8595; Exportar</button>
@@ -1674,7 +1689,12 @@ function renderItensPedido() {
     rows += '<span id="total_' + i + '" style="text-align:center;font-weight:700;font-size:12.5px;color:var(--cyan)">' + calcTotalItem(i) + '</span>';
     var temObs = !!(item.obsItem && item.obsItem.trim());
     rows += '<button class="btn-obs' + (temObs ? ' tem-obs' : '') + '" title="Observação do item" onclick="toggleObsItem(' + i + ')">&#128172;</button>';
+    rows += '<button class="btn-edit-item" title="Editar/substituir produto" onclick="editarItem(' + i + ')">&#9998;</button>';
     rows += '<button class="btn-red btn-xs" onclick="removerItem(' + i + ')">X</button>';
+    rows += '</div>';
+    rows += '<div class="item-edit-overlay" id="editbox_' + i + '" style="display:none">';
+    rows += '<div class="item-edit-wrapper"><input type="text" id="editinput_' + i + '" placeholder="Buscar produto para substituir..." oninput="buscarProdutoEdit(' + i + ',this.value)" onkeydown="navEditResults(event,' + i + ')"><div class="edit-results" id="editresults_' + i + '"></div></div>';
+    rows += '<button class="tb-btn" onclick="fecharEditItem(' + i + ')" style="flex-shrink:0;font-size:11px;padding:4px 10px">Cancelar</button>';
     rows += '</div>';
     var obsAberta = item.obsAberto || temObs;
     if (obsAberta) {
@@ -2101,6 +2121,7 @@ function salvarPedido() {
   document.getElementById('pedido-status-display').style.color = 'var(--green)';
   renderListaPedidos(document.getElementById('busca-pedido').value);
   atualizarBadgePedidos();
+  mostrarToastSalvo(numPedidoAtual);
 }
 
 function carregarPedido(numero) {
@@ -2130,6 +2151,7 @@ function carregarPedido(numero) {
   document.getElementById('num-pedido-display').textContent = numPedidoAtual;
   document.getElementById('pedido-status-display').textContent = '● CARREGADO';
   document.getElementById('pedido-status-display').style.color = 'var(--purple)';
+  var _b=document.getElementById('topbar-nr-pedido');if(_b){_b.innerHTML='&#128230; Pedido '+numPedidoAtual;_b.style.display='inline-block';}
   document.getElementById('busca-cliente').value = '[' + (clienteAtual.codigo||'') + '] ' + (clienteAtual.fantasia||clienteAtual.nome||'');
   renderItensPedido();
   atualizarTotais();
@@ -2152,6 +2174,7 @@ function novoPedido() {
   document.getElementById('obs-pedido').value   = '';
   document.getElementById('num-pedido-display').textContent = '';
   document.getElementById('pedido-status-display').textContent = '';
+  var _b2=document.getElementById('topbar-nr-pedido');if(_b2)_b2.style.display='none';
   document.getElementById('frete-info').style.display = 'none';
   document.getElementById('resumo-frete').textContent = '';
   document.getElementById('lbl-desc-cond').textContent = '';
@@ -3365,7 +3388,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 20/08/2026 14:42</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 20/08/2026 15:30</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
@@ -4343,4 +4366,12 @@ function fecharImportModal() {
   </div>
 </div>
 
+<script>
+function editarItem(idx){var box=document.getElementById("editbox_"+idx);if(!box)return;var v=box.style.display!=="none";document.querySelectorAll(".item-edit-overlay").forEach(function(el){el.style.display="none";});if(!v){box.style.display="flex";var inp=document.getElementById("editinput_"+idx);if(inp){inp.value="";inp.focus();}document.getElementById("editresults_"+idx).innerHTML="";}}
+function fecharEditItem(idx){var box=document.getElementById("editbox_"+idx);if(box)box.style.display="none";}
+function buscarProdutoEdit(idx,termo){var res=document.getElementById("editresults_"+idx);if(!res)return;if(!termo||termo.length<2){res.innerHTML="";return;}var ts=termo.toLowerCase().split(/\s+/).filter(Boolean);var enc=(DB.produtos||[]).filter(function(p){if(!p||!p.preco_tab||parseFloat(p.preco_tab)<=0)return false;var h=((p.codigo||"")+" "+(p.descricao||"")).toLowerCase();return ts.every(function(t){return h.indexOf(t)>=0;});}).slice(0,12);if(!enc.length){res.innerHTML='<div class="edit-result-row" style="color:var(--text2)">Nenhum produto encontrado</div>';return;}res.innerHTML=enc.map(function(p){return'<div class="edit-result-row" onmousedown="selecionarProdutoEdit('+idx+","+JSON.stringify(p.codigo)+')">'+'<span style="color:var(--cyan);font-weight:700">'+(p.codigo||"")+"</span> "+(p.descricao||"")+"</div>";}).join("");}
+function navEditResults(e,idx){if(e.key==="Escape")fecharEditItem(idx);}
+function selecionarProdutoEdit(idx,codigo){var prod=(DB.produtos||[]).find(function(p){return p.codigo===codigo;});if(!prod)return;itensPedido[idx].prod=prod;fecharEditItem(idx);renderItensPedido();atualizarTotais();}
+function mostrarToastSalvo(nr){var el=document.getElementById("toast-salvo"),nrEl=document.getElementById("toast-nr");if(!el)return;if(nrEl)nrEl.textContent=nr;el.classList.add("show");setTimeout(function(){el.classList.remove("show");},3500);var bg=document.getElementById("topbar-nr-pedido");if(bg){bg.innerHTML="&#128230; Pedido "+nr;bg.style.display="inline-block";}}
+</script>
 </body>
