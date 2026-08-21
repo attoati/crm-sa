@@ -502,6 +502,8 @@ button:active::after{width:200px;height:200px;opacity:0;transition:0s}
   pointer-events:none; /* toda interação vai pelo row */
 }
 .prod-check-item.checked{background:rgba(108,75,244,.08);color:var(--cyan)}
+.prod-check-item.focused{background:rgba(108,75,244,.22);color:var(--cyan)}
+#pedido-sticky-header{position:sticky;top:54px;z-index:50;background:var(--card);padding:8px 12px 6px;margin:-4px -12px 0;border-bottom:1px solid rgba(108,75,244,.15)}
 .prod-add-btn{
   position:sticky;bottom:0;
   width:100%;padding:8px 12px;
@@ -1025,11 +1027,12 @@ body{padding-top:104px!important}
     </div>
     <div class="card-body">
 
+      <div id="pedido-sticky-header">
       <!-- DADOS DO CLIENTE (cabeçalho do pedido) -->
-      <div id="pedido-cliente-bar" style="display:none;margin-bottom:14px;padding:12px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg3)"></div>
+      <div id="pedido-cliente-bar" style="display:none;margin-bottom:8px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg3)"></div>
 
       <!-- CONFIG: Condição + Tabela + Frete -->
-      <div class="flex" style="margin-bottom:10px;gap:8px">
+      <div class="flex" style="margin-bottom:6px;gap:8px">
         <div style="flex:1;min-width:110px">
           <div class="section-label">Tabela de Precos</div>
           <select id="sel-tabela" onchange="mudarTabela()">
@@ -1056,7 +1059,7 @@ body{padding-top:104px!important}
       </div>
 
       <!-- DESCONTO COMERCIAL + FRETE -->
-      <div class="mt6" style="background:rgba(108,75,244,.07);border:1px solid rgba(108,75,244,.25);border-radius:6px;padding:7px 10px">
+      <div class="mt6" style="background:rgba(108,75,244,.07);border:1px solid rgba(108,75,244,.25);border-radius:6px;padding:4px 10px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-weight:700;font-size:11.5px;color:var(--purple);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap">Desc. Comercial</span>
           <input type="number" id="desc-com-1" min="0" max="100" step="0.01" value="" style="width:62px" placeholder="D1 %" oninput="onDescComChange()">
@@ -1073,13 +1076,14 @@ body{padding-top:104px!important}
       </div>
 
             <!-- BUSCA PRODUTO -->
-      <div class="autocomplete-wrap mt6">
+      <div class="autocomplete-wrap" style="margin-top:5px">
         <input id="busca-produto" type="text" placeholder="&#128269; Buscar produto por codigo ou descricao..."
           oninput="buscaProdutoAuto(this.value)" autocomplete="off"
           style="border:2px solid var(--cyan,#6c4bf4);box-shadow:0 0 0 2px rgba(108,75,244,.12)"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();if(_prodSelecionados.length>0){adicionarSelecionados();}else{var _first=document.querySelector('#autocomplete-prod-list .prod-check-item');if(_first)_first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));}}">
+          onkeydown="navProdAuto(event)">
         <div id="autocomplete-prod-list" class="autocomplete-list" style="display:none"></div>
       </div>
+      </div><!-- /pedido-sticky-header -->
 
       <!-- TABELA ITENS -->
       <div style="margin-top:10px">
@@ -1606,8 +1610,17 @@ function setSuframaUI(codigoCli, tipo) {
 }
 
 var _prodSelecionados = [];
-
-function buscaProdutoAuto(q) {
+var _prodFocusIdx = -1;
+function navProdAuto(e){
+  var list=document.getElementById('autocomplete-prod-list');
+  var items=list?list.querySelectorAll('.prod-check-item'):[];
+  if(e.key==='ArrowDown'){e.preventDefault();_prodFocusIdx=Math.min(_prodFocusIdx+1,items.length-1);items.forEach(function(el,i){el.classList.toggle('focused',i===_prodFocusIdx);});if(items[_prodFocusIdx])items[_prodFocusIdx].scrollIntoView({block:'nearest'});}
+  else if(e.key==='ArrowUp'){e.preventDefault();_prodFocusIdx=Math.max(_prodFocusIdx-1,-1);items.forEach(function(el,i){el.classList.toggle('focused',i===_prodFocusIdx);});if(_prodFocusIdx>=0&&items[_prodFocusIdx])items[_prodFocusIdx].scrollIntoView({block:'nearest'});}
+  else if(e.key==='Enter'){e.preventDefault();if(_prodFocusIdx>=0&&items[_prodFocusIdx])items[_prodFocusIdx].dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));else if(_prodSelecionados.length>0)adicionarSelecionados();else if(items.length>0)items[0].dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));}
+  else if(e.key==='Escape'){list.style.display='none';_prodFocusIdx=-1;}
+}
+function buscaProdutoAuto(q){
+  _prodFocusIdx=-1;
   var list = document.getElementById('autocomplete-prod-list');
   if (!q || q.length < 2) { list.style.display = 'none'; _prodSelecionados = []; return; }
   var ql = q.toLowerCase();
