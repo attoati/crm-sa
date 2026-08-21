@@ -1630,15 +1630,13 @@ function navProdAuto(e) {
     _prodFocusIdx = Math.max(_prodFocusIdx - 1, -1);
     items.forEach(function(el,i){el.classList.toggle('focused', i===_prodFocusIdx);});
     if (_prodFocusIdx >= 0 && items[_prodFocusIdx]) items[_prodFocusIdx].scrollIntoView({block:'nearest'});
-  } else if (e.key === 'Enter') {
+    } else if (e.key === 'Enter') {
     e.preventDefault();
-    if (now - _lastEnterTime < 600) {
-      if (_prodSelecionados.length > 0) adicionarSelecionados();
-      _lastEnterTime = 0;
+    if (_prodSelecionados.length > 0) {
+      adicionarSelecionados();
     } else {
       var target = (_prodFocusIdx >= 0 && items[_prodFocusIdx]) ? items[_prodFocusIdx] : items[0];
       if (target) target.dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
-      _lastEnterTime = now;
     }
   } else if (e.key === 'Escape') {
     e.preventDefault();
@@ -1729,8 +1727,13 @@ function atualizarBtnAdicionar() {
 function adicionarSelecionados() {
   _prodSelecionados.forEach(function(p) { adicionarItem(p); });
   _prodSelecionados = [];
+  _prodFocusIdx = -1;
   document.getElementById('busca-produto').value = '';
   document.getElementById('autocomplete-prod-list').style.display = 'none';
+  setTimeout(function() {
+    var rows = document.querySelectorAll('.item-row');
+    if (rows.length > 0) rows[rows.length - 1].scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  }, 80);
 }
 
 function adicionarItem(prod) {
@@ -3630,7 +3633,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 21/08/2026 10:32</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 21/08/2026 14:33</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
