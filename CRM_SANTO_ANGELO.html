@@ -1613,13 +1613,49 @@ function setSuframaUI(codigoCli, tipo) {
 
 var _prodSelecionados = [];
 var _prodFocusIdx = -1;
-function navProdAuto(e){
-  var list=document.getElementById('autocomplete-prod-list');
-  var items=list?list.querySelectorAll('.prod-check-item'):[];
-  if(e.key==='ArrowDown'){e.preventDefault();_prodFocusIdx=Math.min(_prodFocusIdx+1,items.length-1);items.forEach(function(el,i){el.classList.toggle('focused',i===_prodFocusIdx);});if(items[_prodFocusIdx])items[_prodFocusIdx].scrollIntoView({block:'nearest'});}
-  else if(e.key==='ArrowUp'){e.preventDefault();_prodFocusIdx=Math.max(_prodFocusIdx-1,-1);items.forEach(function(el,i){el.classList.toggle('focused',i===_prodFocusIdx);});if(_prodFocusIdx>=0&&items[_prodFocusIdx])items[_prodFocusIdx].scrollIntoView({block:'nearest'});}
-  else if(e.key==='Enter'){e.preventDefault();if(_prodFocusIdx>=0&&items[_prodFocusIdx])items[_prodFocusIdx].dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));else if(_prodSelecionados.length>0)adicionarSelecionados();else if(items.length>0)items[0].dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));}
-  else if(e.key==='Escape'){list.style.display='none';_prodFocusIdx=-1;}
+var _lastEnterTime = 0;
+var _lastEscTime = 0;
+
+function navProdAuto(e) {
+  var list = document.getElementById('autocomplete-prod-list');
+  var items = list ? list.querySelectorAll('.prod-check-item') : [];
+  var now = Date.now();
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _prodFocusIdx = Math.min(_prodFocusIdx + 1, items.length - 1);
+    items.forEach(function(el,i){el.classList.toggle('focused', i===_prodFocusIdx);});
+    if (items[_prodFocusIdx]) items[_prodFocusIdx].scrollIntoView({block:'nearest'});
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _prodFocusIdx = Math.max(_prodFocusIdx - 1, -1);
+    items.forEach(function(el,i){el.classList.toggle('focused', i===_prodFocusIdx);});
+    if (_prodFocusIdx >= 0 && items[_prodFocusIdx]) items[_prodFocusIdx].scrollIntoView({block:'nearest'});
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (now - _lastEnterTime < 600) {
+      if (_prodSelecionados.length > 0) adicionarSelecionados();
+      _lastEnterTime = 0;
+    } else {
+      var target = (_prodFocusIdx >= 0 && items[_prodFocusIdx]) ? items[_prodFocusIdx] : items[0];
+      if (target) target.dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
+      _lastEnterTime = now;
+    }
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    if (now - _lastEscTime < 600) {
+      list.style.display = 'none'; _prodFocusIdx = -1;
+      _lastEscTime = 0;
+    } else {
+      _prodSelecionados = []; _prodFocusIdx = -1;
+      items.forEach(function(el) {
+        el.classList.remove('focused', 'checked');
+        var cb = el.querySelector('input[type=checkbox]'); if (cb) cb.checked = false;
+      });
+      var btn = document.getElementById('btn-add-selecionados');
+      if (btn) { btn.textContent = '✓ Selecione os produtos acima'; btn.disabled = true; }
+      _lastEscTime = now;
+    }
+  }
 }
 function buscaProdutoAuto(q){
   _prodFocusIdx=-1;
@@ -3572,7 +3608,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 20/08/2026 17:10</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 21/08/2026 10:32</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
