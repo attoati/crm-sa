@@ -3822,6 +3822,14 @@ window.addEventListener('appinstalled', function() {
         <button onclick="setFontSize(14)" id="fs-14" style="flex:1;padding:6px;font-size:11px;border:1.5px solid var(--border);background:transparent;color:var(--text);border-radius:5px;font-weight:700">Grande</button>
       </div>
     </div>
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <p style="font-size:10px;font-weight:800;color:var(--text2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">&#128100; Vendedor</p>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <input id="cfg-vend-nome" type="text" placeholder="Nome do vendedor" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);border-radius:6px;font-size:12px;box-sizing:border-box">
+        <input id="cfg-vend-wpp" type="tel" placeholder="WhatsApp (ex: 11-9.9295-8998)" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);border-radius:6px;font-size:12px;box-sizing:border-box">
+        <button id="btn-salvar-vendedor" onclick="salvarVendedorConfig()" style="padding:7px;font-size:12px;font-weight:700;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer">Salvar</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -4078,9 +4086,23 @@ function setFontSize(sz) {
   });
 }
 
+function salvarVendedorConfig() {
+  var nome = (document.getElementById('cfg-vend-nome').value||'').trim();
+  var wpp  = (document.getElementById('cfg-vend-wpp').value||'').trim();
+  if (!nome) return;
+  localStorage.setItem('crm_vendedor', JSON.stringify({nome:nome, whatsapp:wpp}));
+  var btn = document.getElementById('btn-salvar-vendedor');
+  if (btn) { btn.textContent = '✓ Salvo!'; setTimeout(function(){ btn.textContent = 'Salvar'; }, 1500); }
+}
+
 function abrirConfiguracoes() {
   var p = document.getElementById('painel-config');
   p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  if (p.style.display !== 'none') {
+    var v = JSON.parse(localStorage.getItem('crm_vendedor')||'{}');
+    var n = document.getElementById('cfg-vend-nome'); if (n) n.value = v.nome||'';
+    var w = document.getElementById('cfg-vend-wpp');  if (w) w.value = v.whatsapp||'';
+  }
 }
 
 // Montar grade de temas
