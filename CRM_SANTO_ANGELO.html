@@ -819,11 +819,13 @@ body{padding-top:104px!important}
 /* ── TOOLTIP FICHA CLIENTE ─────────────────────────────────────────── */
 #ficha-tooltip{
   position:fixed;z-index:99998;
+  top:50%;left:50%;transform:translate(-50%,-50%);
   background:var(--card);border:1px solid var(--border);
   border-radius:10px;box-shadow:0 16px 60px rgba(0,0,0,.55);
-  padding:0;width:700px;max-width:92vw;max-height:75vh;
+  padding:0;width:700px;max-width:92vw;max-height:80vh;
   overflow-y:auto;display:none;pointer-events:auto
 }
+#ficha-backdrop-tip{display:none;position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.45)}
 #ficha-tooltip .card-header{
   position:sticky;top:0;background:var(--card);z-index:1;
   border-bottom:1px solid var(--border);padding:10px 16px;
@@ -1444,7 +1446,7 @@ function renderClienteBarPedido(c) {
   var html = '<div style="display:flex;flex-wrap:wrap;gap:4px 28px;align-items:center;justify-content:space-between">';
   html += '<div><span style="font-size:.65rem;letter-spacing:1px;color:var(--text2)">CLIENTE</span><br>';
   html += '<b style="color:var(--cyan);font-size:1.05rem">' + (c.codigo||'—') + '</b> &nbsp; ';
-  html += '<span class="cli-hover-trigger" data-ficha-hover="1" style="font-weight:700;cursor:pointer" onmouseenter="mostrarFichaTooltip(event)" onmouseleave="agendarOcultarFicha()" title="Passe o mouse para ver ficha completa">' + (c.nome||'—');
+  html += '<span class="cli-hover-trigger" data-ficha-hover="1" style="font-weight:700;cursor:pointer" onclick="mostrarFichaTooltip(event)" title="Clique para ver ficha completa">' + (c.nome||'—');
   if (c.fantasia && c.fantasia !== c.nome) html += ' <span style="color:var(--cyan);font-weight:400">(' + c.fantasia + ')</span>';
   html += '</span></div>';
   html += '<div><span style="font-size:.65rem;letter-spacing:1px;color:var(--text2)">CNPJ</span><br>' + (c.cnpj||'—') + '</div>';
@@ -4041,7 +4043,8 @@ function abrirConfiguracoes() {
 })();
 </script>
 
-<div id="ficha-tooltip" onmouseenter="cancelarOcultarFicha()" onmouseleave="agendarOcultarFicha()">
+<div id="ficha-backdrop-tip" onclick="ocultarFichaTooltip()"></div>
+<div id="ficha-tooltip">
   <div class="card-header">
     <span>&#9432; FICHA DO CLIENTE</span>
     <button onclick="ocultarFichaTooltip()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:16px;line-height:1">&#10005;</button>
@@ -4077,35 +4080,19 @@ document.addEventListener('keydown', function(e){
 });
 var _fichaOcultarTimer = null;
 function mostrarFichaTooltip(e) {
-  cancelarOcultarFicha();
+  if (e) e.stopPropagation();
   var tip = document.getElementById('ficha-tooltip');
+  var bd = document.getElementById('ficha-backdrop-tip');
   if (!tip) return;
-  var triggerEl = e.currentTarget || e.target;
-  var rect = triggerEl.getBoundingClientRect();
-  var tipW = Math.min(700, window.innerWidth * 0.92);
-  var left = Math.max(8, Math.min(rect.left, window.innerWidth - tipW - 8));
-  var spaceAbove = rect.top - 10;
-  var spaceBelow = window.innerHeight - rect.bottom - 10;
-  tip.style.width = tipW + 'px';
-  tip.style.maxHeight = Math.min(Math.max(spaceAbove, spaceBelow) - 10, window.innerHeight * 0.7) + 'px';
-  tip.style.left = left + 'px';
-  if (spaceAbove > spaceBelow && spaceAbove > 150) {
-    tip.style.top = 'auto';
-    tip.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
-  } else {
-    tip.style.bottom = 'auto';
-    tip.style.top = (rect.bottom + 4) + 'px';
-  }
   tip.style.display = 'block';
+  if (bd) bd.style.display = 'block';
 }
-function agendarOcultarFicha() {
-  _fichaOcultarTimer = setTimeout(ocultarFichaTooltip, 250);
-}
-function cancelarOcultarFicha() {
-  if (_fichaOcultarTimer) { clearTimeout(_fichaOcultarTimer); _fichaOcultarTimer = null; }
-}
+function agendarOcultarFicha() {}
+function cancelarOcultarFicha() {}
 function ocultarFichaTooltip() {
   var tip = document.getElementById('ficha-tooltip');
+  var bd = document.getElementById('ficha-backdrop-tip');
+  if (bd) bd.style.display = 'none';
   if (tip) tip.style.display = 'none';
 }
 /* ═══════════════════════════════════════════════════════
