@@ -1823,6 +1823,7 @@ function fecharEditItem(idx) {
 }
 
 function buscarProdutoEdit(idx, termo) {
+  if (_editFocusIdx) _editFocusIdx[idx] = -1;
   var res = document.getElementById('editresults_' + idx);
   if (!res) return;
   if (!termo || termo.length < 2) { res.innerHTML = ''; return; }
@@ -1839,8 +1840,29 @@ function buscarProdutoEdit(idx, termo) {
   }).join('');
 }
 
+var _editFocusIdx = {};
+
 function navEditResults(e, idx) {
-  if (e.key === 'Escape') fecharEditItem(idx);
+  var res = document.getElementById('editresults_' + idx);
+  var items = res ? res.querySelectorAll('.edit-result-row') : [];
+  if (_editFocusIdx[idx] == null) _editFocusIdx[idx] = -1;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _editFocusIdx[idx] = Math.min(_editFocusIdx[idx] + 1, items.length - 1);
+    items.forEach(function(el,i){el.classList.toggle('focused', i===_editFocusIdx[idx]);});
+    if (items[_editFocusIdx[idx]]) items[_editFocusIdx[idx]].scrollIntoView({block:'nearest'});
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _editFocusIdx[idx] = Math.max(_editFocusIdx[idx] - 1, -1);
+    items.forEach(function(el,i){el.classList.toggle('focused', i===_editFocusIdx[idx]);});
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    var f = _editFocusIdx[idx];
+    var target = (f >= 0 && items[f]) ? items[f] : items[0];
+    if (target) target.dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
+  } else if (e.key === 'Escape') {
+    fecharEditItem(idx);
+  }
 }
 
 function selecionarProdutoEdit(idx, codigo) {
