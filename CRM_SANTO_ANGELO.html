@@ -232,7 +232,8 @@ button:active::after{width:200px;height:200px;opacity:0;transition:0s}
   transition:background .15s;
   line-height:1.4;
 }
-.autocomplete-list div:hover{background:var(--bg3);color:var(--cyan)}
+.autocomplete-list div:hover,.autocomplete-list div.focused{background:var(--bg3);color:var(--cyan)}
+.edit-result-row.focused{background:var(--bg3);color:var(--cyan)}
 .autocomplete-list::-webkit-scrollbar{width:4px}
 .autocomplete-list::-webkit-scrollbar-track{background:var(--bg3)}
 .autocomplete-list::-webkit-scrollbar-thumb{background:var(--cyan);border-radius:2px}
@@ -247,7 +248,7 @@ button:active::after{width:200px;height:200px;opacity:0;transition:0s}
 /* PEDIDO ITENS */
 .pedido-header{
   display:grid;
-  grid-template-columns:26px 2.4fr 55px 105px 75px 90px 105px 30px 30px 30px;
+  grid-template-columns:26px 2.4fr 55px 105px 75px 90px 105px 30px 30px;
   gap:4px;padding:6px 10px;
   background:rgba(108,75,244,.07);
   border:1px solid rgba(108,75,244,.25);
@@ -502,8 +503,8 @@ button:active::after{width:200px;height:200px;opacity:0;transition:0s}
   pointer-events:none; /* toda interação vai pelo row */
 }
 .prod-check-item.checked{background:rgba(108,75,244,.08);color:var(--cyan)}
-.prod-check-item.focused{background:rgba(108,75,244,.22);color:var(--cyan)}
-#pedido-sticky-header{position:sticky;top:54px;z-index:50;background:var(--card);padding:8px 12px 6px;margin:-4px -12px 0;border-bottom:1px solid rgba(108,75,244,.15)}
+.prod-check-item.focused{background:rgba(108,75,244,.22);color:var(--cyan);outline:none}
+#pedido-sticky-header{position:sticky;top:54px;z-index:50;background:var(--card);padding-bottom:6px;margin:-4px -12px 0;padding:8px 12px 6px;border-bottom:1px solid rgba(108,75,244,.15)}
 .prod-add-btn{
   position:sticky;bottom:0;
   width:100%;padding:8px 12px;
@@ -967,7 +968,7 @@ body{padding-top:104px!important}
   <div class="topbar-client">
     <div class="autocomplete-wrap">
       <input id="busca-cliente" type="text" placeholder="&#128269; C&#243;d, nome, fantasia ou CNPJ..."
-        oninput="buscaClienteAuto(this.value)" autocomplete="off">
+        oninput="buscaClienteAuto(this.value)" autocomplete="off" onkeydown="navClienteAuto(event)">
       <div id="autocomplete-list" class="autocomplete-list" style="display:none"></div>
     </div>
     <div id="topbar-cli-resumo">
@@ -1061,7 +1062,7 @@ body{padding-top:104px!important}
       </div>
 
       <!-- DESCONTO COMERCIAL + FRETE -->
-      <div class="mt6" style="background:rgba(108,75,244,.07);border:1px solid rgba(108,75,244,.25);border-radius:6px;padding:4px 10px">
+      <div style="background:rgba(108,75,244,.07);border:1px solid rgba(108,75,244,.25);border-radius:6px;padding:4px 10px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-weight:700;font-size:11.5px;color:var(--purple);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap">Desc. Comercial</span>
           <input type="number" id="desc-com-1" min="0" max="100" step="0.01" value="" style="width:76px" placeholder="D1 %" oninput="onDescComChange()">
@@ -1256,7 +1257,33 @@ function getCondicao() {
 /* Desconto de condição sempre zero — desconto só via campos D1-D4 e desc. item */
 function getDescCondicaoEfetiva() { return 0; }
 
+var _clienteFocusIdx = -1;
+
+function navClienteAuto(e) {
+  var list = document.getElementById('autocomplete-list');
+  var items = list ? list.querySelectorAll('div') : [];
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _clienteFocusIdx = Math.min(_clienteFocusIdx + 1, items.length - 1);
+    items.forEach(function(el,i){el.classList.toggle('focused', i===_clienteFocusIdx);});
+    if (items[_clienteFocusIdx]) items[_clienteFocusIdx].scrollIntoView({block:'nearest'});
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _clienteFocusIdx = Math.max(_clienteFocusIdx - 1, -1);
+    items.forEach(function(el,i){el.classList.toggle('focused', i===_clienteFocusIdx);});
+    if (_clienteFocusIdx >= 0 && items[_clienteFocusIdx]) items[_clienteFocusIdx].scrollIntoView({block:'nearest'});
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    var target = (_clienteFocusIdx >= 0 && items[_clienteFocusIdx]) ? items[_clienteFocusIdx] : items[0];
+    if (target) target.dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    list.style.display = 'none'; _clienteFocusIdx = -1;
+  }
+}
+
 function buscaClienteAuto(q) {
+  _clienteFocusIdx = -1;
   var list = document.getElementById('autocomplete-list');
   if (!q || q.length < 2) { list.style.display = 'none'; return; }
   if (!DB.clientes || !DB.clientes.length) { list.style.display = 'none'; return; }
@@ -1633,20 +1660,24 @@ function navProdAuto(e) {
     _prodFocusIdx = Math.max(_prodFocusIdx - 1, -1);
     items.forEach(function(el,i){el.classList.toggle('focused', i===_prodFocusIdx);});
     if (_prodFocusIdx >= 0 && items[_prodFocusIdx]) items[_prodFocusIdx].scrollIntoView({block:'nearest'});
-    } else if (e.key === 'Enter') {
+  } else if (e.key === 'Enter') {
     e.preventDefault();
     if (_prodSelecionados.length > 0) {
+      // Já tem selecionados → adiciona tudo
       adicionarSelecionados();
     } else {
+      // Nada selecionado → seleciona/toggle item em foco (ou primeiro da lista)
       var target = (_prodFocusIdx >= 0 && items[_prodFocusIdx]) ? items[_prodFocusIdx] : items[0];
       if (target) target.dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
     }
   } else if (e.key === 'Escape') {
     e.preventDefault();
     if (now - _lastEscTime < 600) {
+      // 2º Esc → fecha a lista
       list.style.display = 'none'; _prodFocusIdx = -1;
       _lastEscTime = 0;
     } else {
+      // 1º Esc → limpa seleção e foco
       _prodSelecionados = []; _prodFocusIdx = -1;
       items.forEach(function(el) {
         el.classList.remove('focused', 'checked');
@@ -1658,8 +1689,9 @@ function navProdAuto(e) {
     }
   }
 }
-function buscaProdutoAuto(q){
-  _prodFocusIdx=-1;
+
+function buscaProdutoAuto(q) {
+  _prodFocusIdx = -1;
   var list = document.getElementById('autocomplete-prod-list');
   if (!q || q.length < 2) { list.style.display = 'none'; _prodSelecionados = []; return; }
   var ql = q.toLowerCase();
@@ -1733,6 +1765,7 @@ function adicionarSelecionados() {
   _prodFocusIdx = -1;
   document.getElementById('busca-produto').value = '';
   document.getElementById('autocomplete-prod-list').style.display = 'none';
+  // Scroll para o último item adicionado
   setTimeout(function() {
     var rows = document.querySelectorAll('.item-row');
     if (rows.length > 0) rows[rows.length - 1].scrollIntoView({behavior: 'smooth', block: 'nearest'});
@@ -1791,6 +1824,7 @@ function salvarPrecoManual(idx, val) {
   var v = parseFloat(val);
   var item = itensPedido[idx];
   if (!item) return;
+  // O usuário digitou o preço já com descontos aplicados — precisamos reverter
   var _dCom = getDescComercial() / 100;
   var _cond = getCondicao();
   var _dCond = getDescCondicaoEfetiva();
@@ -1904,8 +1938,8 @@ function renderItensPedido() {
     var p = item.prod;
     var precoBase = precoSemIPI(p);
     var ipiUnit = valorIPIUnit(p);
-    var isManual = (itensPedido[i].preco_manual != null && itensPedido[i].preco_manual >= 0);
-    var preco = isManual ? itensPedido[i].preco_manual : precoBase;
+    var isManual = item.preco_manual != null && item.preco_manual >= 0;
+    var preco = isManual ? item.preco_manual : precoBase;
     var qtdVal = (item.qtd !== '') ? item.qtd : '';
     var diVal = item.descItem || 0;
     var _di = (item.descItem||0) / 100;
@@ -1913,7 +1947,7 @@ function renderItensPedido() {
     var _cond = getCondicao();
     var _dCond = getDescCondicaoEfetiva();
     var precoComDesc = preco * (1 - _dCond) * (1 - _dCom) * (1 - _di);
-    var ipiComDesc = ipiUnit * (1 - _dCond) * (1 - _dCom) * (1 - _di);
+    var ipiComDesc = isManual ? 0 : (ipiUnit * (1 - _dCond) * (1 - _dCom) * (1 - _di));
     rows += '<div class="pedido-item">';
     rows += '<span style="text-align:center;font-size:10px;color:var(--text2);font-weight:700">' + (i+1) + '</span>';
     rows += '<span style="font-size:12px"><span style="color:var(--cyan);font-weight:700">' + (p.codigo||'') + '</span> ' + (p.descricao||'') + '</span>';
@@ -2637,33 +2671,41 @@ async function _salvarArquivo(blob, nomeArq, mimeType) {
   setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
 }
 function exportarExcel() { exportarPedidoExcel(); }
-function exportarAmbos() {
+async function exportarAmbos() {
   if (!clienteAtual) { alert('Selecione um cliente antes de exportar.'); return; }
   if (!itensPedido.length) { alert('Adicione pelo menos um produto ao pedido.'); return; }
   salvarPedidoSilencioso();
-  exportarExcel();
-  var nomeArq = _nomePedido() + '.pdf';
-  var temp = document.createElement('div');
-  temp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:794px;background:#fff;padding:20px;font-size:11px;font-family:Arial,sans-serif';
-  temp.innerHTML = gerarHTMLPedido();
-  document.body.appendChild(temp);
-  html2canvas(temp,{scale:2,useCORS:true,backgroundColor:'#ffffff'}).then(function(canvas){
-    document.body.removeChild(temp);
-    var _jspdf = window.jspdf||window.jsPDF;
-    var jsPDF = _jspdf ? (_jspdf.jsPDF||_jspdf) : null;
-    if (!jsPDF) { alert('jsPDF não disponível. Use o botão GERAR PDF.'); return; }
-    var pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-    var margin=8,pageH=297,imgWidth=210-margin*2;
-    var imgHeight=canvas.height*imgWidth/canvas.width;
-    var heightLeft=imgHeight,position=margin;
-    var imgData=canvas.toDataURL('image/jpeg',0.92);
-    pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);
-    heightLeft-=(pageH-margin*2);
-    while(heightLeft>0){position=margin-(imgHeight-heightLeft);pdf.addPage();pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);heightLeft-=(pageH-margin*2);}
-    var url = URL.createObjectURL(pdf.output('blob'));
-    var a = document.createElement('a'); a.href=url; a.download=nomeArq; a.click();
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+  /* 1. Gerar blob Excel (síncrono) */
+  var xlsxBlob = _gerarExcelBlob();
+  var xlsxNome = _nomePedido() + '.xlsx';
+  /* 2. Gerar blob PDF (assíncrono via canvas) */
+  var pdfNome = _nomePedido() + '.pdf';
+  var pdfBlob = await new Promise(function(resolve) {
+    var temp = document.createElement('div');
+    temp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:794px;background:#fff;padding:20px;font-size:11px;font-family:Arial,sans-serif';
+    temp.innerHTML = gerarHTMLPedido();
+    document.body.appendChild(temp);
+    html2canvas(temp,{scale:2,useCORS:true,backgroundColor:'#ffffff'}).then(function(canvas){
+      document.body.removeChild(temp);
+      var _jspdf = window.jspdf||window.jsPDF;
+      var jsPDF = _jspdf ? (_jspdf.jsPDF||_jspdf) : null;
+      if (!jsPDF) { resolve(null); return; }
+      var pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      var margin=8,pageH=297,imgWidth=210-margin*2;
+      var imgHeight=canvas.height*imgWidth/canvas.width;
+      var heightLeft=imgHeight,position=margin;
+      var imgData=canvas.toDataURL('image/jpeg',0.92);
+      pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);
+      heightLeft-=(pageH-margin*2);
+      while(heightLeft>0){position=margin-(imgHeight-heightLeft);pdf.addPage();pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);heightLeft-=(pageH-margin*2);}
+      resolve(pdf.output('blob'));
+    });
   });
+  if (!pdfBlob) { alert('jsPDF não disponível. Use o botão GERAR PDF.'); return; }
+  /* 3. Salvar PDF via showSaveFilePicker (1º diálogo) */
+  await _salvarArquivo(pdfBlob, pdfNome, 'application/pdf');
+  /* 4. Salvar Excel via showSaveFilePicker (2º diálogo) */
+  await _salvarArquivo(xlsxBlob, xlsxNome, 'application/xlsx');
 }
 
 function previewPDF() {
@@ -2683,10 +2725,7 @@ function confirmarImprimir() {
   if (numPed) setTimeout(function(){ document.title = tituloOrig; }, 1000);
 }
 
-function exportarPedidoExcel() {
-  if (!clienteAtual) { alert('Selecione um cliente antes de exportar.'); return; }
-  if (!itensPedido.length) { alert('Adicione pelo menos um produto ao pedido.'); return; }
-
+function _gerarExcelBlob() {
   var c = clienteAtual;
   var cond = getCondicao();
   var descCond = getDescCondicaoEfetiva();
@@ -2763,10 +2802,14 @@ function exportarPedidoExcel() {
 
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Pedido');
-  var nomeArq = _nomePedido() + '.xlsx';
   var arr = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-  var blob = new Blob([arr], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  _salvarArquivo(blob, nomeArq, 'application/xlsx');
+  return new Blob([arr], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function exportarPedidoExcel() {
+  if (!clienteAtual) { alert('Selecione um cliente antes de exportar.'); return; }
+  if (!itensPedido.length) { alert('Adicione pelo menos um produto ao pedido.'); return; }
+  var blob = _gerarExcelBlob();
+  _salvarArquivo(blob, _nomePedido() + '.xlsx', 'application/xlsx');
 }
 
 function gerarHTMLPedido() {
@@ -3667,7 +3710,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 24/08/2026 10:05</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 24/08/2026 10:21</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
@@ -4132,6 +4175,7 @@ function salvarVendedorConfig() {
 function abrirConfiguracoes() {
   var p = document.getElementById('painel-config');
   p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  // Pré-preenche campos do vendedor
   if (p.style.display !== 'none') {
     var v = JSON.parse(localStorage.getItem('crm_vendedor')||'{}');
     var n = document.getElementById('cfg-vend-nome'); if (n) n.value = v.nome||'';
