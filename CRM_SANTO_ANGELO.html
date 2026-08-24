@@ -2867,12 +2867,14 @@ function gerarHTMLPedido() {
   var icmsZFM = (_sufTotais === 'completo') ? totalMercNacional * 0.07 : 0;
   var totalFinal = totalMerc + totalIPIPdf - icmsZFM;
   h += '<div style="display:flex;justify-content:flex-end;margin-bottom:14px">';
-  h += '<div style="min-width:300px;box-shadow:0 0 0 1.5px #d8d3ee;border-radius:8px;overflow:hidden;font-size:9pt">';
+  h += '<div style="min-width:300px;font-size:9pt">';
+  h += '<div style="border:1px solid #d8d3ee;border-radius:8px 8px 0 0;border-bottom:none">';
   h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444">Total Mercadoria</span><span style="font-weight:600">'+fmt(totalMerc)+'</span></div>';
   h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444;font-weight:600">IPI</span><span style="color:#444;font-weight:600">'+fmt(totalIPIPdf)+'</span></div>';
   if (totalDescPdf > 0.01) h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444">Desconto</span><span style="color:#444">- '+fmt(totalDescPdf)+'</span></div>';
   if (icmsZFM > 0.01) h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444">ICMS ZFM 7%</span><span style="color:#444">- '+fmt(icmsZFM)+'</span></div>';
-  h += '<div style="display:flex;justify-content:space-between;padding:8px 14px;background:#4b1d63"><span style="color:#fff;font-weight:700;font-size:11pt">Total</span><span style="color:#fff;font-weight:700;font-size:11pt">'+fmt(totalFinal)+'</span></div>';
+  h += '</div>';
+  h += '<div style="display:flex;justify-content:space-between;padding:8px 14px;background:#4b1d63;border-radius:0 0 8px 8px"><span style="color:#fff;font-weight:700;font-size:11pt">Total</span><span style="color:#fff;font-weight:700;font-size:11pt">'+fmt(totalFinal)+'</span></div>';
   h += '</div></div>';
   /* ── OBSERVACOES ── */
   var obs = document.getElementById('obs-pedido').value;
@@ -3638,7 +3640,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 24/08/2026 08:54</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 24/08/2026 08:58</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
