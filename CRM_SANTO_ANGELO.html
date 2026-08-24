@@ -2637,7 +2637,34 @@ async function _salvarArquivo(blob, nomeArq, mimeType) {
   setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
 }
 function exportarExcel() { exportarPedidoExcel(); }
-function exportarAmbos() { exportarPDF(); exportarExcel(); }
+function exportarAmbos() {
+  if (!clienteAtual) { alert('Selecione um cliente antes de exportar.'); return; }
+  if (!itensPedido.length) { alert('Adicione pelo menos um produto ao pedido.'); return; }
+  salvarPedidoSilencioso();
+  exportarExcel();
+  var nomeArq = _nomePedido() + '.pdf';
+  var temp = document.createElement('div');
+  temp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:794px;background:#fff;padding:20px;font-size:11px;font-family:Arial,sans-serif';
+  temp.innerHTML = gerarHTMLPedido();
+  document.body.appendChild(temp);
+  html2canvas(temp,{scale:2,useCORS:true,backgroundColor:'#ffffff'}).then(function(canvas){
+    document.body.removeChild(temp);
+    var _jspdf = window.jspdf||window.jsPDF;
+    var jsPDF = _jspdf ? (_jspdf.jsPDF||_jspdf) : null;
+    if (!jsPDF) { alert('jsPDF não disponível. Use o botão GERAR PDF.'); return; }
+    var pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var margin=8,pageH=297,imgWidth=210-margin*2;
+    var imgHeight=canvas.height*imgWidth/canvas.width;
+    var heightLeft=imgHeight,position=margin;
+    var imgData=canvas.toDataURL('image/jpeg',0.92);
+    pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);
+    heightLeft-=(pageH-margin*2);
+    while(heightLeft>0){position=margin-(imgHeight-heightLeft);pdf.addPage();pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);heightLeft-=(pageH-margin*2);}
+    var url = URL.createObjectURL(pdf.output('blob'));
+    var a = document.createElement('a'); a.href=url; a.download=nomeArq; a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+  });
+}
 
 function previewPDF() {
   if (!clienteAtual) { alert('Selecione um cliente antes de gerar o PDF.'); return; }
@@ -3640,7 +3667,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 24/08/2026 08:58</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 24/08/2026 10:05</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
