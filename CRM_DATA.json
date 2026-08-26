@@ -80909,6 +80909,136 @@
       "preco_tabela": 4.87,
       "ipi": 0.0,
       "preco_filial": 4.87
+    },
+    {
+      "codigo": "0.0.00.015.012",
+      "descricao": "REGUA FILTRO DE PROTECAO FP2 COM CABO 1,5MTS",
+      "linha": "LANÇAMENTOS",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 186.38,
+      "preco_filial": 145.74,
+      "ipi": 0.0975
+    },
+    {
+      "codigo": "0.0.00.062.026",
+      "descricao": "MICROFONE SEM FIO TALKBACK SAS 2610",
+      "linha": "LANÇAMENTOS",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 963.0,
+      "ipi": 0
+    },
+    {
+      "codigo": "0.0.00.062.025",
+      "descricao": "KIT MICROFONE BATERIA SAS 709D",
+      "linha": "LANÇAMENTOS",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 1141.28,
+      "ipi": 0.0975
+    },
+    {
+      "codigo": "0.0.00.062.027",
+      "descricao": "MICROFONE SAS 704",
+      "linha": "LANÇAMENTOS",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 170.0,
+      "ipi": 0.0975
+    },
+    {
+      "codigo": "0.0.00.062.028",
+      "descricao": "BODYPACK SAS M310",
+      "linha": "LANÇAMENTOS",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 572.0,
+      "ipi": 0
+    },
+    {
+      "codigo": "0.0.00.003.033",
+      "descricao": "10FT/ 3.05M YASUKE CABLE",
+      "linha": "MONTADO COM CABO G75 (0,75MM²/18AWG) E CONECTORES P10 USINADOS EM LATÃO CLA E BANHO DE OURO 18K, CONECTORES BLINDADOS COM THERMOCONTRATIL.",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 137.85,
+      "ipi": 0.05
+    },
+    {
+      "codigo": "0.0.00.003.034",
+      "descricao": "15FT/ 4.57M YASUKE CABLE",
+      "linha": "MONTADO COM CABO G75 (0,75MM²/18AWG) E CONECTORES P10 USINADOS EM LATÃO CLA E BANHO DE OURO 18K, CONECTORES BLINDADOS COM THERMOCONTRATIL.",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 151.88,
+      "ipi": 0.05
+    },
+    {
+      "codigo": "0.0.00.003.035",
+      "descricao": "20FT/ 6.10M YASUKE CABLE",
+      "linha": "MONTADO COM CABO G75 (0,75MM²/18AWG) E CONECTORES P10 USINADOS EM LATÃO CLA E BANHO DE OURO 18K, CONECTORES BLINDADOS COM THERMOCONTRATIL.",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 166.39,
+      "ipi": 0.05
+    },
+    {
+      "codigo": "0.0.00.003.036",
+      "descricao": "25FT/ 7.62M YASUKE CABLE",
+      "linha": "MONTADO COM CABO G75 (0,75MM²/18AWG) E CONECTORES P10 USINADOS EM LATÃO CLA E BANHO DE OURO 18K, CONECTORES BLINDADOS COM THERMOCONTRATIL.",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 180.42,
+      "ipi": 0.05
+    },
+    {
+      "codigo": "0.0.00.003.037",
+      "descricao": "10FT/ 3.05M YASUKE L CABLE",
+      "linha": "MONTADO COM CABO G75 (0,75MM²/18AWG) E CONECTORES P10 USINADOS EM LATÃO CLA E BANHO DE OURO 18K, CONECTORES BLINDADOS COM THERMOCONTRATIL. (P10 90º x P10 180º).",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 174.11,
+      "ipi": 0.05
+    },
+    {
+      "codigo": "0.0.00.003.038",
+      "descricao": "15FT/ 4.57M YASUKE L CABLE",
+      "linha": "MONTADO COM CABO G75 (0,75MM²/18AWG) E CONECTORES P10 USINADOS EM LATÃO CLA E BANHO DE OURO 18K, CONECTORES BLINDADOS COM THERMOCONTRATIL. (P10 90º x P10 180º).",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 188.15,
+      "ipi": 0.05
+    },
+    {
+      "codigo": "0.0.00.003.039",
+      "descricao": "20FT/ 6.10M YASUKE L CABLE",
+      "linha": "MONTADO COM CABO G75 (0,75MM²/18AWG) E CONECTORES P10 USINADOS EM LATÃO CLA E BANHO DE OURO 18K, CONECTORES BLINDADOS COM THERMOCONTRATIL. (P10 90º x P10 180º).",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 202.65,
+      "ipi": 0.05
+    },
+    {
+      "codigo": "0.0.00.003.040",
+      "descricao": "25FT/ 7.62M YASUKE L CABLE",
+      "linha": "MONTADO COM CABO G75 (0,75MM²/18AWG) E CONECTORES P10 USINADOS EM LATÃO CLA E BANHO DE OURO 18K, CONECTORES BLINDADOS COM THERMOCONTRATIL. (P10 90º x P10 180º).",
+      "emb": 1,
+      "origem": "I",
+      "preco_tabela": 0,
+      "preco_filial": 216.69,
+      "ipi": 0.05
     }
   ],
   "_ultima_atualizacao": "20/08/2026 16:00",
