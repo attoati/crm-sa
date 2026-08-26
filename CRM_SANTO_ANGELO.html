@@ -2666,6 +2666,28 @@ function _nomePedido() {
   var tipo = nr ? 'PED' : 'ORC';
   return (fant + ' ' + tipo + (nr ? ' ' + nr : '')).replace(/[/\\:*?"<>|]/g,'_');
 }
+/* Recorta o canvas em fatias de página para evitar conteúdo duplicado na quebra */
+function _canvasParaPDF(canvas, pdf) {
+  var margin = 8;
+  var printW = 210 - margin * 2; // 194mm
+  var printH = 297 - margin * 2; // 281mm
+  var pxPerMm = canvas.width / printW;
+  var pageHeightPx = Math.round(printH * pxPerMm);
+  var totalPages = Math.ceil(canvas.height / pageHeightPx);
+  for (var pg = 0; pg < totalPages; pg++) {
+    if (pg > 0) pdf.addPage();
+    var srcY = pg * pageHeightPx;
+    var srcH = Math.min(pageHeightPx, canvas.height - srcY);
+    var pc = document.createElement('canvas');
+    pc.width = canvas.width;
+    pc.height = pageHeightPx;
+    var ctx = pc.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, pc.width, pc.height);
+    ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+    pdf.addImage(pc.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, printW, srcH / pxPerMm);
+  }
+}
 function exportarPDF() {
   if (!clienteAtual) { alert('Selecione um cliente antes de exportar.'); return; }
   if (!itensPedido.length) { alert('Adicione pelo menos um produto ao pedido.'); return; }
@@ -2681,13 +2703,7 @@ function exportarPDF() {
     var jsPDF = _jspdf ? (_jspdf.jsPDF||_jspdf) : null;
     if (!jsPDF) { alert('jsPDF não disponível. Use o botão GERAR PDF.'); return; }
     var pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-    var margin=8,pageH=297,imgWidth=210-margin*2;
-    var imgHeight=canvas.height*imgWidth/canvas.width;
-    var heightLeft=imgHeight,position=margin;
-    var imgData=canvas.toDataURL('image/jpeg',0.92);
-    pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);
-    heightLeft-=(pageH-margin*2);
-    while(heightLeft>0){position=margin-(imgHeight-heightLeft);pdf.addPage();pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);heightLeft-=(pageH-margin*2);}
+    _canvasParaPDF(canvas, pdf);
     _salvarArquivo(pdf.output('blob'), nomeArq, 'application/pdf');
   });
 }
@@ -2733,13 +2749,7 @@ async function exportarAmbos() {
       var jsPDF = _jspdf ? (_jspdf.jsPDF||_jspdf) : null;
       if (!jsPDF) { resolve(null); return; }
       var pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-      var margin=8,pageH=297,imgWidth=210-margin*2;
-      var imgHeight=canvas.height*imgWidth/canvas.width;
-      var heightLeft=imgHeight,position=margin;
-      var imgData=canvas.toDataURL('image/jpeg',0.92);
-      pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);
-      heightLeft-=(pageH-margin*2);
-      while(heightLeft>0){position=margin-(imgHeight-heightLeft);pdf.addPage();pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight);heightLeft-=(pageH-margin*2);}
+      _canvasParaPDF(canvas, pdf);
       resolve(pdf.output('blob'));
     });
   });
@@ -3752,7 +3762,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 26/08/2026 19:41</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 26/08/2026 21:15</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
