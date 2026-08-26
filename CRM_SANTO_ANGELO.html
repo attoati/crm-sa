@@ -1126,6 +1126,7 @@ body{padding-top:104px!important}
       <div class="flex mt10" style="flex-wrap:wrap;gap:8px;align-items:center">
         <button class="btn-green" onclick="salvarPedido()">&#9632; SALVAR PEDIDO</button>
         <button class="btn-cyan" onclick="previewPDF()">&#9654; GERAR PDF</button>
+        <button class="btn-orange btn-sm" onclick="duplicarPedido()" title="Duplica este orçamento com nova numeração" style="font-size:.75rem;padding:5px 12px;letter-spacing:.4px">&#9315; DUPLICAR</button>
         <div style="position:relative;display:inline-block">
           <button class="btn-purple" onclick="toggleExportMenu(event)" style="letter-spacing:.5px">&#8645; EXPORTAR</button>
           <div id="export-menu" style="display:none;position:absolute;bottom:110%;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;min-width:190px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.4)">
@@ -2464,6 +2465,47 @@ function novoPedido() {
   atualizarTotais();
 }
 
+function duplicarPedido() {
+  if (!clienteAtual) { alert('Selecione um cliente antes de duplicar.'); return; }
+  if (!itensPedido.length) { alert('Adicione pelo menos um item antes de duplicar.'); return; }
+  /* Salva o original antes de duplicar */
+  salvarPedidoSilencioso();
+  var origemNum = numPedidoAtual;
+  /* Gera novo número */
+  var novoNum = gerarNumero();
+  numPedidoAtual = novoNum;
+  /* Copia profunda dos itens */
+  itensPedido = itensPedido.map(function(it) {
+    return { prod: it.prod, qtd: it.qtd, descItem: it.descItem||0, obsItem: it.obsItem||'' };
+  });
+  /* Salva o duplicado */
+  var pedidos = JSON.parse(localStorage.getItem('crm_pedidos')||'{}');
+  pedidos[novoNum] = {
+    numero: novoNum,
+    data: new Date().toLocaleDateString('pt-BR'),
+    hora: new Date().toLocaleTimeString('pt-BR'),
+    cliente: clienteAtual,
+    itens: itensPedido,
+    condicao: document.getElementById('sel-condicao').value,
+    tabela:   document.getElementById('sel-tabela').value,
+    frete:    document.getElementById('sel-frete').value,
+    transportadora: (function(){ var t=document.getElementById('fob-transportadora')||document.getElementById('redespacho-transportadora'); return t?t.value:''; })(),
+    descComercial: getDescComercial(),
+    obs: document.getElementById('obs-pedido').value,
+    total: calcTotalLiquido()
+  };
+  localStorage.setItem('crm_pedidos', JSON.stringify(pedidos));
+  syncPedidosServidor(pedidos);
+  document.getElementById('num-pedido-display').textContent = novoNum;
+  document.getElementById('pedido-status-display').textContent = '● SALVO';
+  document.getElementById('pedido-status-display').style.color = 'var(--green)';
+  var _badge = document.getElementById('topbar-nr-pedido');
+  if (_badge) { _badge.innerHTML = '&#128230; Pedido ' + novoNum; _badge.style.display='inline-block'; }
+  renderListaPedidos(document.getElementById('busca-pedido').value);
+  atualizarBadgePedidos();
+  mostrarToastSalvo(novoNum);
+}
+
 function atualizarBadgePedidos() {
   var pedidos = JSON.parse(localStorage.getItem('crm_pedidos')||'{}');
   var n = Object.keys(pedidos).length;
@@ -3710,7 +3752,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 26/08/2026 13:36</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 26/08/2026 19:41</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
