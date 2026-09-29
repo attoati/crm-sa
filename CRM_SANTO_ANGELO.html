@@ -1589,7 +1589,11 @@ function precoSemIPI(prod) {
       var icmsDataSuf = (estSuf && DB.icms[estSuf]) ? DB.icms[estSuf].matriz : null;
       icmsSuf = (typeof icmsDataSuf === 'number') ? icmsDataSuf : 0.1182;
     }
-    /* DIF price × (1 - PIS+COFINS 9,12%) — mesmo cálculo para Nacional e Importado */
+    /* Se o produto tem desconto_zfm específico (calibrado pelo SAP), usa diretamente */
+    if (typeof prod.desconto_zfm === 'number' && prod.desconto_zfm >= 0) {
+      return prod.preco_tabela * (1 - prod.desconto_zfm);
+    }
+    /* Fallback: DIF price × (1 - PIS+COFINS 9,12%) — cálculo genérico */
     return precoTabelaAjustado(prod) * (1 - icmsSuf) * (1 - SUFRAMA_DESC_IMPORTADO);
   }
   var tabAtual = document.getElementById('sel-tabela') ? document.getElementById('sel-tabela').value : 'matriz';
@@ -2805,19 +2809,22 @@ function _gerarExcelBlob() {
   rows.push([]);
   rows.push(['Codigo','Descricao','Qtd','Preco','IPI%','Desc%','Preco Unit c/Desc','Total']);
 
+  var isSuframa = !!getSuframaCliente(clienteAtual); // IPI isento para SUFRAMA
   var bruto = 0;
   for (var i = 0; i < itensPedido.length; i++) {
     var item = itensPedido[i];
     var prod = item.prod;
-    var preco = precoComICMS(prod);
-    var precoBase = precoSemIPI(prod);
+    var precoBase = precoSemIPI(prod); // preço sem IPI (já inclui desconto ICMS ZFM se SUFRAMA)
+    var precoFull = isSuframa ? precoBase : precoComICMS(prod); // SUFRAMA → sem IPI
     var qtd = parseInt(item.qtd)||1;
     var di = (item.descItem||0)/100;
-    var tot = preco * qtd * (1-descCond) * (1-descCom) * (1-di);
-    bruto += preco * qtd;
-    var ipiPct = prod.ipi ? (parseFloat((prod.ipi*100).toFixed(2))) : 0;
-    var dcPct = parseFloat(((descCom + di)*100).toFixed(2));
+    var tot = precoFull * qtd * (1-descCond) * (1-descCom) * (1-di);
+    bruto += precoFull * qtd;
+    var ipiPct = isSuframa ? 0 : (prod.ipi ? parseFloat((prod.ipi*100).toFixed(2)) : 0);
     var precoUnitDesc = precoBase * (1-descCond) * (1-descCom) * (1-di);
+    // Desc% efetivo = diferença real entre tabela e preço final (inclui ZFM se SUFRAMA)
+    var precoTabela = prod.preco_tabela || precoBase;
+    var dcPct = precoTabela > 0 ? parseFloat(((1 - precoUnitDesc/precoTabela)*100).toFixed(2)) : parseFloat(((descCom+di)*100).toFixed(2));
     rows.push([prod.codigo||'', prod.descricao||'', qtd, Number(precoBase.toFixed(2)), ipiPct/100, dcPct, Number(precoUnitDesc.toFixed(2)), Number(tot.toFixed(2))]);
     if (item.obsItem && item.obsItem.trim()) {
       rows.push(['', 'Obs: '+item.obsItem, '', '', '', '', '', '']);
@@ -2944,6 +2951,7 @@ function gerarHTMLPedido() {
   h += '<th style="padding:5px 7px;border-bottom:2px solid #4b1d63;font-weight:700;letter-spacing:.3px;text-align:right">Total c/IPI</th>';
   h += '</tr>';
   var totalMerc = 0, totalIPIPdf = 0, totalDescPdf = 0, totalMercNacional = 0;
+  var _sufPdf = getSuframaCliente(clienteAtual);
   var bdRow = '1px solid #d8d3ee';
   for (var i = 0; i < itensPedido.length; i++) {
     var item = itensPedido[i];
@@ -2954,27 +2962,30 @@ function gerarHTMLPedido() {
     var di = (item.descItem||0)/100;
     var precoLiquido = precoBase * (1-descCond) * (1-descCom) * (1-di);
     var ipiUnit = ipiUnitPdf * (1-descCond) * (1-descCom) * (1-di);
-    var totSemIpi = precoLiquido * qtd;
+    /* ICMS ZFM 7% aplicado por linha para produtos Nacionais SUFRAMA completo */
+    var isNacSuf = (_sufPdf === 'completo') && (getOrigemProd(prod) !== 'I');
+    var precoFinal = isNacSuf ? precoLiquido * 0.93 : precoLiquido;
+    var totSemIpi = precoFinal * qtd;
     var totIpi    = ipiUnit * qtd;
     var totCIpi   = totSemIpi + totIpi;
-    /* Desconto % combinado */
+    /* Desconto % combinado (base comercial, sem incluir ZFM no %) */
     var descTotalPct = 1 - (1-descCond)*(1-descCom)*(1-di);
     var descPctLabel = descTotalPct > 0.001 ? (parseFloat((descTotalPct*100).toFixed(2)))+'%' : '-';
-    /* Desconto R$ para totais */
+    /* Desconto R$ para totais (pré-ZFM para não inflar o desconto) */
     var precoTab = prod.preco_tabela || precoBase;
     var descR = (precoTab - precoLiquido) * qtd;
     totalMerc    += totSemIpi;
     totalIPIPdf  += totIpi;
     totalDescPdf += (descR > 0 ? descR : 0);
-    /* ICMS ZFM 7% incide apenas em produtos Nacionais */
-    if (getOrigemProd(prod) !== 'I') totalMercNacional += totSemIpi;
+    /* Acumula base pré-ZFM para exibir Benefício SUFRAMA no rodapé */
+    if (isNacSuf) totalMercNacional += precoLiquido * qtd;
     var ipiPct  = getSuframaCliente(clienteAtual) ? 'Isento' : (prod.ipi ? parseFloat((prod.ipi*100).toFixed(2))+'%' : '-');
     var bg = '#fff'; /* linha sempre branca — borda dá o ritmo visual */
     h += '<tr style="background:'+bg+'">';
     h += '<td style="padding:4px 7px;border-bottom:'+bdRow+';font-family:monospace;font-size:8.5pt">'+(prod.codigo||'')+'</td>';
     h += '<td style="padding:4px 7px;border-bottom:'+bdRow+'">'+(prod.descricao||'')+'</td>';
     h += '<td style="padding:4px 7px;border-bottom:'+bdRow+';text-align:center;font-weight:700">'+qtd+'</td>';
-    h += '<td style="padding:4px 7px;border-bottom:'+bdRow+';text-align:right">'+fmt(precoLiquido)+'</td>';
+    h += '<td style="padding:4px 7px;border-bottom:'+bdRow+';text-align:right">'+fmt(precoFinal)+'</td>';
     h += '<td style="padding:4px 7px;border-bottom:'+bdRow+';text-align:center;font-weight:600;color:#333">'+ipiPct+'</td>';
     h += '<td style="padding:4px 7px;border-bottom:'+bdRow+';text-align:center;color:#555">'+descPctLabel+'</td>';
     h += '<td style="padding:4px 7px;border-bottom:'+bdRow+';text-align:right;font-weight:700;color:#222">'+fmt(totCIpi)+'</td>';
@@ -2986,16 +2997,16 @@ function gerarHTMLPedido() {
   h += '</table>';
   /* ── TOTAIS em caixa à direita ── */
   var _sufTotais = getSuframaCliente(clienteAtual);
-  /* ICMS ZFM 7% só sobre produtos Nacionais; Importados pagam apenas PIS+COFINS */
+  /* ZFM 7% já aplicado por linha; totalMercNacional acumula a base pré-ZFM (nacionais) */
   var icmsZFM = (_sufTotais === 'completo') ? totalMercNacional * 0.07 : 0;
-  var totalFinal = totalMerc + totalIPIPdf - icmsZFM;
+  var totalFinal = totalMerc + totalIPIPdf; /* ZFM já embutido nas linhas */
   h += '<div style="display:flex;justify-content:flex-end;margin-bottom:14px">';
   h += '<div style="min-width:300px;font-size:9pt">';
   h += '<div style="border:1px solid #d8d3ee;border-radius:8px 8px 0 0;border-bottom:none">';
   h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444">Total Mercadoria</span><span style="font-weight:600">'+fmt(totalMerc)+'</span></div>';
   h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444;font-weight:600">IPI</span><span style="color:#444;font-weight:600">'+fmt(totalIPIPdf)+'</span></div>';
   if (totalDescPdf > 0.01) h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444">Desconto</span><span style="color:#444">- '+fmt(totalDescPdf)+'</span></div>';
-  if (icmsZFM > 0.01) h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#444">ICMS ZFM 7%</span><span style="color:#444">- '+fmt(icmsZFM)+'</span></div>';
+  if (icmsZFM > 0.01) h += '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #e8e3f5"><span style="color:#009966;font-style:italic">&#9679; Benef. SUFRAMA ZFM</span><span style="color:#009966;font-style:italic">'+fmt(icmsZFM)+'</span></div>';
   h += '</div>';
   h += '<div style="display:flex;justify-content:space-between;padding:8px 14px;background:#4b1d63;border-radius:0 0 8px 8px"><span style="color:#fff;font-weight:700;font-size:11pt">Total</span><span style="color:#fff;font-weight:700;font-size:11pt">'+fmt(totalFinal)+'</span></div>';
   h += '</div></div>';
@@ -3763,7 +3774,7 @@ document.addEventListener('click', function(e) {
 
 <!-- RODAPÉ CRM -->
 <div id="footer-crm">
-  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 26/08/2026 21:40</span></span>
+  <span>&#169; CRM Vendas &mdash; Santo Angelo &nbsp;|&nbsp; <span id="footer-crm-version" style="color:var(--cyan)"></span>&nbsp;|&nbsp;<span style="color:var(--text2);font-size:10px" title="Versao do codigo">&#9889; Cód: 28/09/2026 14:00</span></span>
   <span><a href="qr.html" target="_blank" style="color:#fff;text-decoration:none;font-size:11px;font-weight:700;background:var(--primary);border-radius:6px;padding:3px 10px;letter-spacing:.3px">📱 Celular</a></span>
   <span id="footer-last-sync"></span>
 </div>
