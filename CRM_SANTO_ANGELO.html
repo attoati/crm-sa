@@ -1873,8 +1873,8 @@ function buscarProdutoEdit(idx, termo) {
   if (!res) return;
   if (!termo || termo.length < 2) { res.innerHTML = ''; return; }
   var termos = termo.toLowerCase().split(/\s+/).filter(Boolean);
-  var encontrados = (DB.produtos || []).filter(function(p) {
-    if (!p || !p.preco_tab || parseFloat(p.preco_tab) <= 0) return false;
+  var encontrados = (getProdutos() || []).filter(function(p) {
+    if (!p || !p.preco_tabela || parseFloat(p.preco_tabela) <= 0) return false;
     var hay = ((p.codigo||'') + ' ' + (p.descricao||'')).toLowerCase();
     return termos.every(function(t){ return hay.indexOf(t) >= 0; });
   }).slice(0, 12);
@@ -1911,7 +1911,7 @@ function navEditResults(e, idx) {
 }
 
 function selecionarProdutoEdit(idx, codigo) {
-  var prod = (DB.produtos || []).find(function(p){ return p.codigo === codigo; });
+  var prod = (getProdutos() || []).find(function(p){ return p.codigo === codigo; });
   if (!prod) return;
   itensPedido[idx].prod = prod;
   fecharEditItem(idx);
