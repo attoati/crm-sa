@@ -1880,7 +1880,7 @@ function buscarProdutoEdit(idx, termo) {
   }).slice(0, 12);
   if (!encontrados.length) { res.innerHTML = '<div class="edit-result-row" style="color:var(--text2)">Nenhum produto encontrado</div>'; return; }
   res.innerHTML = encontrados.map(function(p, i) {
-    return '<div class="edit-result-row" data-eidx="' + i + '" onmousedown="selecionarProdutoEdit(' + idx + ',' + JSON.stringify(p.codigo) + ')">' +
+    return '<div class="edit-result-row" data-eidx="' + i + '" onmousedown="selecionarProdutoEdit(' + idx + ',\'' + (p.codigo||'').replace(/'/g,'\\\'') + '\')">' +
       '<span style="color:var(--cyan);font-weight:700">' + (p.codigo||'') + '</span> ' + (p.descricao||'') + '</div>';
   }).join('');
 }
